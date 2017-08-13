@@ -1,6 +1,3 @@
-
-#pragma GCC diagnostic ignored "-Wall"
-
 /*
 LodePNG version 20161127
 
@@ -888,22 +885,6 @@ without warning.
 } /* namespace lodepng */
 #endif /*LODEPNG_COMPILE_CPP*/
 
-/*
-TODO:
-[.] test if there are no memory leaks or security exploits - done a lot but needs to be checked often
-[.] check compatibility with various compilers  - done but needs to be redone for every newer version
-[X] converting color to 16-bit per channel types
-[ ] read all public PNG chunk types (but never let the color profile and gamma ones touch RGB values)
-[ ] make sure encoder generates no chunks with size > (2^31)-1
-[ ] partial decoding (stream processing)
-[X] let the "isFullyOpaque" function check color keys and transparent palettes too
-[X] better name for the variables "codes", "codesD", "codelengthcodes", "clcl" and "lldl"
-[ ] don't stop decoding on errors like 69, 57, 58 (make warnings)
-[ ] make warnings like: oob palette, checksum fail, data after iend, wrong/unknown crit chunk, no null terminator in text, ...
-[ ] let the C++ wrapper catch exceptions coming from the standard library and return LodePNG error codes
-[ ] allow user to provide custom color conversion functions, e.g. for premultiplied alpha, padding bits or not, ...
-[ ] allow user to give data (void*) to custom allocator
-*/
 
 #endif /*LODEPNG_H inclusion guard*/
 
