@@ -13,7 +13,7 @@ char* readFile(const char* path) {
 
     std::ifstream file(path, std::ios::binary | std::ios::ate);
     if(file.is_open()) {
-        std::streamsize size = std::streamsize(file.tellg());
+        auto size = std::streamsize(file.tellg());
         file.seekg(0);
 
         data = new char[size + 1];

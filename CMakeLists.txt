@@ -14,14 +14,19 @@ link_directories("${OPENGL_DIRECTORY}/Libraries")
 
 # Set the paths to all the sourcefiles
 set(SOURCE_FILES
-        src/External/glew.c include/GL/glew.h
+        src/External/glew.c include/GL/glew.h include/IMG/lodepng.h src/External/lodepng.cpp
         src/main.cpp
-        src/Model.cpp include/Model.h src/Shader.cpp src/Shader.h include/ReadFile.h src/Texture.cpp src/Texture.h)
+        src/Model.cpp include/Model.h
+        src/Shader.cpp include/Shader.h
+        include/ReadFile.h
+        src/Texture.cpp include/Texture.h
+        include/Camera.h include/Batch/glm.h
+        src/FirstPersonController.cpp include/FirstPersonController.h)
 
 add_executable(Minecraft_Clone ${SOURCE_FILES})
 
 
-target_link_libraries(Minecraft_Clone -lopengl32 -lglu32 -lglew32 -lglfw3)
+target_link_libraries(Minecraft_Clone -lopengl32 -lglew32 -lglfw3)
 
 
 

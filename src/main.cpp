@@ -1,17 +1,28 @@
 #include <iostream>
 
-#define GLEW_STATIC
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
-#include <ReadFile.h>
+
 
 #include "Model.h"
 #include "Shader.h"
 #include "Texture.h"
 
+#include "FirstPersonController.h"
+
+#include "ReadFile.h"
+#include "IMG/lodepng.h"
+
+
+#define WINDOW_WIDTH 800
+#define WINDOW_HEIGHT 600
+
+
 struct Scene
 {
-    Scene(){}
+    Scene() = default;
+
+    FirstPersonController controller;
 
     Shader shader;
     Model model;
@@ -19,13 +30,99 @@ struct Scene
     Texture texture;
 };
 
-void render(Scene& scene);
+
+Scene* currentScene;
+
+
+GLFWwindow* createWindow();
+void setupCallbacks(GLFWwindow* window);
+
+void createScene(Scene& scene);
+void setupController(Scene& scene);
+void createModels(Scene& scene);
+void createShaders(Scene& scene);
+void createTextures(Scene& scene);
 void onWindowResize(GLFWwindow* window, int width, int height);
+
+
+void update(Scene &scene, float deltaTime);
+void render(Scene& scene);
+
+
 
 
 int main() {
     std::cout << "Hello, World!" << std::endl;
 
+    GLFWwindow* window = createWindow();
+
+    // Enable OpenGL features
+    glEnable(GL_MULTISAMPLE);
+    glClearColor(0.2, 0.2, 0.2, 1.0);
+
+
+    // Create scene
+    Scene scene = Scene();
+    createScene(scene);
+    currentScene = &scene;
+
+    // Enter main loop
+    while (glfwWindowShouldClose(window) == 0)
+    {
+        glfwPollEvents();
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        update(scene, 1.f/60);
+        render(scene);
+
+        glfwSwapBuffers(window);
+    }
+
+
+    return 0;
+}
+
+
+void update(Scene &scene, float deltaTime) {
+    auto time = float(glfwGetTime());
+
+    scene.controller.setPosition(2.f * glm::vec3(sinf(time), 0, cosf(time)));
+    scene.controller.setDirection(glm::normalize(-scene.controller.getPosition()));
+}
+
+void render(Scene& scene)
+{
+    scene.texture.bind();
+    scene.shader.use();
+
+    glm::mat4 projectionViewMatrix = scene.controller.getCombinedMatrix();
+    glUniformMatrix4fv(scene.shader.getUniformLocation("projectionViewMatrix"), 1, 0,
+                       glm::value_ptr(projectionViewMatrix));
+
+    scene.model.draw();
+}
+
+
+/*
+ * Callbacks
+ */
+
+void onWindowResize(GLFWwindow* window, int width, int height)
+{
+    glViewport(0, 0, width, height);
+
+    if(currentScene != nullptr)
+    {
+        currentScene->controller.setCameraAspect(float(width) / height);
+    }
+}
+
+/*
+ * SETUP
+ */
+
+
+GLFWwindow * createWindow() {
     if(glfwInit() == 0)
     {
         throw std::runtime_error("Failed to init GLFW!");
@@ -33,29 +130,36 @@ int main() {
 
     glfwWindowHint(GLFW_SAMPLES, 8);
 
-    GLFWwindow* window = glfwCreateWindow(800, 600, "Minecraft Clone", nullptr, nullptr);
+    GLFWwindow* window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Minecraft Clone", nullptr, nullptr);
     glfwMakeContextCurrent(window);
-
-
-    // Setup callbacks
-    glfwSetWindowSizeCallback(window, onWindowResize);
-
 
     if(glewInit() == 1)
     {
         throw std::runtime_error("Failed to init GLEW!");
     }
 
+    setupCallbacks(window);
 
-    // Enable OpenGL features
-    glEnable(GL_MULTISAMPLE);
+    return window;
+}
 
-    glClearColor(0.2, 0.2, 0.2, 1.0);
+void setupCallbacks(GLFWwindow *window) {
+    glfwSetWindowSizeCallback(window, onWindowResize);
+}
 
 
-    // Create scene
-    Scene scene = Scene();
+void createScene(Scene &scene) {
+    setupController(scene);
+    createModels(scene);
+    createShaders(scene);
+    createTextures(scene);
+}
 
+void setupController(Scene& scene) {
+    scene.controller.setCameraAspect(float(WINDOW_WIDTH) / WINDOW_HEIGHT);
+}
+
+void createModels(Scene &scene) {
     Vertex vertices[] = {
             Vertex(glm::vec3(0.5, 0.5, 0), glm::vec2(1, 1)),
             Vertex(glm::vec3(0.5, -0.5, 0), glm::vec2(1, 0)),
@@ -70,10 +174,9 @@ int main() {
 
     scene.model.setVertices(vertices, 4);
     scene.model.setIndices(indices, 6);
+}
 
-
-
-    // Create shaders
+void createShaders(Scene &scene) {
     char* vertexSource = readFile("resources/shader.vert");
     char* fragmentSource = readFile("resources/shader.frag");
 
@@ -85,59 +188,22 @@ int main() {
             GL_VERTEX_SHADER,
             GL_FRAGMENT_SHADER
     };
+
+
+
     scene.shader.create(sources, types, 2);
     delete[] vertexSource;
     delete[] fragmentSource;
+}
 
-
-
-    // Create textures
-    const int width = 10,
+void createTextures(Scene &scene) {
+    unsigned width = 10,
             height = 10;
 
-    unsigned char pixels[width * height * 4];
+    std::vector<unsigned char> pixels;
+    lodepng::decode(pixels, width, height, "resources/textures/grass.png");
 
-    for (int i = 0; i < height; ++i) {
-        for (int j = 0; j < width; ++j) {
-            int index = 4 * (j + i * width);
-
-            pixels[index]     = (unsigned char)(rand() % 256);
-            pixels[index + 1] = (unsigned char)(rand() % 256);
-            pixels[index + 2] = (unsigned char)(rand() % 256);
-            pixels[index + 3] = 255;
-        }
-    }
-
-    scene.texture.setPixels(pixels, width, height);
+    scene.texture.setPixels(pixels.data(), width, height);
     scene.texture.setMinMagFilter(GL_NEAREST, GL_NEAREST);
     scene.texture.setWrapMode(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
-
-
-    while (glfwWindowShouldClose(window) == 0)
-    {
-        glfwPollEvents();
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        render(scene);
-
-        glfwSwapBuffers(window);
-    }
-
-
-    return 0;
-}
-
-
-void render(Scene& scene)
-{
-    scene.texture.bind();
-    scene.shader.use();
-    scene.model.draw();
-}
-
-
-
-void onWindowResize(GLFWwindow* window, int width, int height)
-{
-    glViewport(0, 0, width, height);
 }
