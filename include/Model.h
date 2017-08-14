@@ -7,7 +7,7 @@
 
 
 #include <GL/glew.h>
-#include <glm/glm.hpp>
+#include <Batch/glm.h>
 
 struct Vertex
 {

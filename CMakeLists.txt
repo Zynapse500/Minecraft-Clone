@@ -21,7 +21,7 @@ set(SOURCE_FILES
         include/ReadFile.h
         src/Texture.cpp include/Texture.h
         include/Camera.h include/Batch/glm.h
-        src/FirstPersonController.cpp include/FirstPersonController.h)
+        src/FirstPersonController.cpp include/FirstPersonController.h src/Chunk.cpp include/Chunk.h)
 
 add_executable(Minecraft_Clone ${SOURCE_FILES})
 
