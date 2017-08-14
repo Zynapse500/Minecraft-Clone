@@ -28,8 +28,8 @@ private:
     Model model;
 
     // Height and size of the chunk (width = depth = size)
-    static const unsigned size = 1;
-    static const unsigned height = 1;
+    static const unsigned size = 16;
+    static const unsigned height = 256;
 
     // Position of the chunk in the world (y never changes)
     int chunk_x = 0;

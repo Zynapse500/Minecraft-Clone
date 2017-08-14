@@ -5,7 +5,6 @@
 #include <Chunk.h>
 
 
-#include "Model.h"
 #include "Shader.h"
 #include "Texture.h"
 
@@ -25,7 +24,6 @@ struct Scene {
     FirstPersonController controller;
 
     Shader shader;
-    Model model;
 
     Texture texture;
 
@@ -45,7 +43,7 @@ void createScene(Scene& scene);
 
 void setupController(Scene& scene);
 
-void createModels(Scene& scene);
+void createChunks(Scene& scene);
 
 void createShaders(Scene& scene);
 
@@ -159,8 +157,6 @@ void render(Scene& scene) {
     glUniformMatrix4fv(scene.shader.getUniformLocation("projectionViewMatrix"), 1, 0,
                        glm::value_ptr(projectionViewMatrix));
 
-    //scene.model.draw();
-
     scene.chunk.draw();
 }
 
@@ -243,33 +239,18 @@ void setupCallbacks(GLFWwindow *window) {
 
 void createScene(Scene& scene) {
     setupController(scene);
-    createModels(scene);
+    createChunks(scene);
     createShaders(scene);
     createTextures(scene);
-
-    scene.chunk.generate(0, 0);
 }
 
 void setupController(Scene& scene) {
     scene.controller.setCameraAspect(float(WINDOW_WIDTH) / WINDOW_HEIGHT);
-    scene.controller.setPosition(glm::vec3(-5, -5, -5));
+    scene.controller.setPosition(glm::vec3(-3, 0, 0));
 }
 
-void createModels(Scene& scene) {
-    Vertex vertices[] = {
-            Vertex(glm::vec3(0.5, 0.5, 0), glm::vec2(1, 1)),
-            Vertex(glm::vec3(0.5, -0.5, 0), glm::vec2(1, 0)),
-            Vertex(glm::vec3(-0.5, 0.5, 0), glm::vec2(0, 1)),
-            Vertex(glm::vec3(-0.5, -0.5, 0), glm::vec2(0, 0)),
-    };
-
-    GLuint indices[] = {
-            0, 1, 3,
-            3, 2, 0
-    };
-
-    scene.model.setVertices(vertices, 4);
-    scene.model.setIndices(indices, 6);
+void createChunks(Scene& scene) {
+    scene.chunk.generate(0, 0);
 }
 
 void createShaders(Scene& scene) {
@@ -299,7 +280,7 @@ void createTextures(Scene& scene) {
     lodepng::decode(pixels, width, height, "resources/textures/grass.png");
 
     scene.texture.setPixels(pixels.data(), width, height);
-    scene.texture.setMinMagFilter(GL_NEAREST, GL_NEAREST);
+    scene.texture.setMinMagFilter(GL_LINEAR, GL_NEAREST);
     scene.texture.setWrapMode(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
 }
 
