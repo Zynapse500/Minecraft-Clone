@@ -24,6 +24,12 @@ struct Vertex
         this->texCoord = texCoord;
     }
 
+    Vertex(glm::vec3 position, glm::vec2 texCoord, glm::vec3 normal) {
+        this->position = position;
+        this->texCoord = texCoord;
+        this->normal = normal;
+    }
+
 };
 
 

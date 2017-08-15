@@ -13,10 +13,10 @@ void Chunk::generate(int _x, int _z) {
     for (int x = 0; x < size; x++) {
         for (int y = 0; y < height; ++y) {
             for (int z = 0; z < size; ++z) {
-                if (rand() % 100 < 20)
-                    *getBlock(x, y, z) = 1;
+                if (rand() % 64 > y)
+                    *getBlockLocal(x, y, z) = 1;
                 else
-                    *getBlock(x, y, z) = 0;
+                    *getBlockLocal(x, y, z) = 0;
             }
         }
     }
@@ -35,14 +35,14 @@ void Chunk::generate(int _x, int _z) {
     for (int x = 0; x < size; ++x) {
         for (int y = 0; y < height; ++y) {
             for (int z = 0; z < size; ++z) {
-                unsigned* currentBlock = getBlock(x, y, z);
+                unsigned* currentBlock = getBlockLocal(x, y, z);
 
                 if (*currentBlock != 0) {
                     // For every direction check adjacent blocks and add face
                     for (auto& dir : directions) {
-                        auto *adjacentBlock = getBlock(x + dir.x,
-                                                       y + dir.y,
-                                                       z + dir.z);
+                        auto *adjacentBlock = getBlockLocal(x + dir.x,
+                                                             y + dir.y,
+                                                             z + dir.z);
 
                         if(adjacentBlock == nullptr || *adjacentBlock == 0)
                             addFace(x, y, z, dir.x, dir.y, dir.z, *currentBlock);
@@ -60,10 +60,28 @@ void Chunk::generate(int _x, int _z) {
     this->indices.clear();
 }
 
-unsigned int *Chunk::getBlock(int x, int y, int z) {
+unsigned int *Chunk::getBlockGlobal(int x, int y, int z) {
     // Convert x and z to local coordinates
     convertToLocal(&x, &z);
 
+    auto isInRage = [](int a, int min, int max) {
+        return min <= a && a < max;
+    };
+
+    if (!isInRage(x, 0, size))
+        return nullptr;
+    if (!isInRage(y, 0, height))
+        return nullptr;
+    if (!isInRage(z, 0, size))
+        return nullptr;
+
+    int layer = y * this->size * this->size;
+    int row = z * this->size;
+
+    return &(blockMap[x + row + layer]);
+}
+
+unsigned int *Chunk::getBlockLocal(int x, int y, int z) {
     auto isInRage = [](int a, int min, int max) {
         return min <= a && a < max;
     };
@@ -91,6 +109,10 @@ void Chunk::draw() {
 }
 
 void Chunk::addFace(int x, int y, int z, int dir_x, int dir_y, int dir_z, unsigned block) {
+
+    x += chunk_x;
+    z += chunk_z;
+
     GLuint vertexCount = this->vertices.size();
     GLuint indices[] = {
             vertexCount + 0,
@@ -102,35 +124,35 @@ void Chunk::addFace(int x, int y, int z, int dir_x, int dir_y, int dir_z, unsign
     };
 
     if (dir_x == 1) {
-        this->vertices.emplace_back(glm::vec3(x + 0.5, y + 0.5, z + 0.5), glm::vec2(1, 1));
-        this->vertices.emplace_back(glm::vec3(x + 0.5, y - 0.5, z + 0.5), glm::vec2(1, 0));
-        this->vertices.emplace_back(glm::vec3(x + 0.5, y - 0.5, z - 0.5), glm::vec2(0, 0));
-        this->vertices.emplace_back(glm::vec3(x + 0.5, y + 0.5, z - 0.5), glm::vec2(0, 1));
+        this->vertices.emplace_back(glm::vec3(x + 0.5, y + 0.5, z + 0.5), glm::vec2(1, 1), glm::vec3(1, 0, 0));
+        this->vertices.emplace_back(glm::vec3(x + 0.5, y - 0.5, z + 0.5), glm::vec2(1, 0), glm::vec3(1, 0, 0));
+        this->vertices.emplace_back(glm::vec3(x + 0.5, y - 0.5, z - 0.5), glm::vec2(0, 0), glm::vec3(1, 0, 0));
+        this->vertices.emplace_back(glm::vec3(x + 0.5, y + 0.5, z - 0.5), glm::vec2(0, 1), glm::vec3(1, 0, 0));
     } else if (dir_x == -1) {
-        this->vertices.emplace_back(glm::vec3(x - 0.5, y + 0.5, z - 0.5), glm::vec2(1, 1));
-        this->vertices.emplace_back(glm::vec3(x - 0.5, y - 0.5, z - 0.5), glm::vec2(1, 0));
-        this->vertices.emplace_back(glm::vec3(x - 0.5, y - 0.5, z + 0.5), glm::vec2(0, 0));
-        this->vertices.emplace_back(glm::vec3(x - 0.5, y + 0.5, z + 0.5), glm::vec2(0, 1));
+        this->vertices.emplace_back(glm::vec3(x - 0.5, y + 0.5, z - 0.5), glm::vec2(1, 1), glm::vec3(-1, 0, 0));
+        this->vertices.emplace_back(glm::vec3(x - 0.5, y - 0.5, z - 0.5), glm::vec2(1, 0), glm::vec3(-1, 0, 0));
+        this->vertices.emplace_back(glm::vec3(x - 0.5, y - 0.5, z + 0.5), glm::vec2(0, 0), glm::vec3(-1, 0, 0));
+        this->vertices.emplace_back(glm::vec3(x - 0.5, y + 0.5, z + 0.5), glm::vec2(0, 1), glm::vec3(-1, 0, 0));
     } else if (dir_z == 1) {
-        this->vertices.emplace_back(glm::vec3(x - 0.5, y + 0.5, z + 0.5), glm::vec2(1, 1));
-        this->vertices.emplace_back(glm::vec3(x - 0.5, y - 0.5, z + 0.5), glm::vec2(1, 0));
-        this->vertices.emplace_back(glm::vec3(x + 0.5, y - 0.5, z + 0.5), glm::vec2(0, 0));
-        this->vertices.emplace_back(glm::vec3(x + 0.5, y + 0.5, z + 0.5), glm::vec2(0, 1));
+        this->vertices.emplace_back(glm::vec3(x - 0.5, y + 0.5, z + 0.5), glm::vec2(1, 1), glm::vec3(0, 0, 1));
+        this->vertices.emplace_back(glm::vec3(x - 0.5, y - 0.5, z + 0.5), glm::vec2(1, 0), glm::vec3(0, 0, 1));
+        this->vertices.emplace_back(glm::vec3(x + 0.5, y - 0.5, z + 0.5), glm::vec2(0, 0), glm::vec3(0, 0, 1));
+        this->vertices.emplace_back(glm::vec3(x + 0.5, y + 0.5, z + 0.5), glm::vec2(0, 1), glm::vec3(0, 0, 1));
     } else if (dir_z == -1) {
-        this->vertices.emplace_back(glm::vec3(x + 0.5, y + 0.5, z - 0.5), glm::vec2(1, 1));
-        this->vertices.emplace_back(glm::vec3(x + 0.5, y - 0.5, z - 0.5), glm::vec2(1, 0));
-        this->vertices.emplace_back(glm::vec3(x - 0.5, y - 0.5, z - 0.5), glm::vec2(0, 0));
-        this->vertices.emplace_back(glm::vec3(x - 0.5, y + 0.5, z - 0.5), glm::vec2(0, 1));
+        this->vertices.emplace_back(glm::vec3(x + 0.5, y + 0.5, z - 0.5), glm::vec2(1, 1), glm::vec3(0, 0, -1));
+        this->vertices.emplace_back(glm::vec3(x + 0.5, y - 0.5, z - 0.5), glm::vec2(1, 0), glm::vec3(0, 0, -1));
+        this->vertices.emplace_back(glm::vec3(x - 0.5, y - 0.5, z - 0.5), glm::vec2(0, 0), glm::vec3(0, 0, -1));
+        this->vertices.emplace_back(glm::vec3(x - 0.5, y + 0.5, z - 0.5), glm::vec2(0, 1), glm::vec3(0, 0, -1));
     } else if (dir_y == 1) {
-        this->vertices.emplace_back(glm::vec3(x - 0.5, y + 0.5, z + 0.5), glm::vec2(1, 1));
-        this->vertices.emplace_back(glm::vec3(x + 0.5, y + 0.5, z + 0.5), glm::vec2(1, 0));
-        this->vertices.emplace_back(glm::vec3(x + 0.5, y + 0.5, z - 0.5), glm::vec2(0, 0));
-        this->vertices.emplace_back(glm::vec3(x - 0.5, y + 0.5, z - 0.5), glm::vec2(0, 1));
+        this->vertices.emplace_back(glm::vec3(x - 0.5, y + 0.5, z + 0.5), glm::vec2(1, 1), glm::vec3(0, 1, 0));
+        this->vertices.emplace_back(glm::vec3(x + 0.5, y + 0.5, z + 0.5), glm::vec2(1, 0), glm::vec3(0, 1, 0));
+        this->vertices.emplace_back(glm::vec3(x + 0.5, y + 0.5, z - 0.5), glm::vec2(0, 0), glm::vec3(0, 1, 0));
+        this->vertices.emplace_back(glm::vec3(x - 0.5, y + 0.5, z - 0.5), glm::vec2(0, 1), glm::vec3(0, 1, 0));
     } else if (dir_y == -1) {
-        this->vertices.emplace_back(glm::vec3(x - 0.5, y - 0.5, z - 0.5), glm::vec2(1, 1));
-        this->vertices.emplace_back(glm::vec3(x + 0.5, y - 0.5, z - 0.5), glm::vec2(1, 0));
-        this->vertices.emplace_back(glm::vec3(x + 0.5, y - 0.5, z + 0.5), glm::vec2(0, 0));
-        this->vertices.emplace_back(glm::vec3(x - 0.5, y - 0.5, z + 0.5), glm::vec2(0, 1));
+        this->vertices.emplace_back(glm::vec3(x - 0.5, y - 0.5, z - 0.5), glm::vec2(1, 1), glm::vec3(0, -1, 0));
+        this->vertices.emplace_back(glm::vec3(x + 0.5, y - 0.5, z - 0.5), glm::vec2(1, 0), glm::vec3(0, -1, 0));
+        this->vertices.emplace_back(glm::vec3(x + 0.5, y - 0.5, z + 0.5), glm::vec2(0, 0), glm::vec3(0, -1, 0));
+        this->vertices.emplace_back(glm::vec3(x - 0.5, y - 0.5, z + 0.5), glm::vec2(0, 1), glm::vec3(0, -1, 0));
     }
 
 

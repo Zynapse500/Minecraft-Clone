@@ -39,7 +39,11 @@ private:
     unsigned blockMap[size * size * height];
 
     // Returns a reference to the block at location (x, y, z)
-    unsigned int * getBlock(int x, int y, int z);
+    unsigned int * getBlockGlobal(int x, int y, int z);
+
+    // Returns a reference to the block at local location (x, y, z)
+    unsigned int * getBlockLocal(int x, int y, int z);
+
 
     // Converts global to local coordinates for chunk (y doesn't change)
     void convertToLocal(int *x, int *z);

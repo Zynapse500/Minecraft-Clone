@@ -3,6 +3,7 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <Chunk.h>
+#include <World.h>
 
 
 #include "Shader.h"
@@ -27,7 +28,8 @@ struct Scene {
 
     Texture texture;
 
-    Chunk chunk;
+//    Chunk chunk;
+    World world;
 };
 
 
@@ -129,7 +131,7 @@ int main() {
 void update(Scene& scene, float deltaTime) {
     auto time = float(glfwGetTime());
 
-    scene.controller.rotate(0.005f * mouseDelta.x, -0.005f * mouseDelta.y);
+    scene.controller.rotate(0.003f * mouseDelta.x, -0.003f * mouseDelta.y);
 
     float moveSpeed = 4;
 
@@ -157,7 +159,7 @@ void render(Scene& scene) {
     glUniformMatrix4fv(scene.shader.getUniformLocation("projectionViewMatrix"), 1, 0,
                        glm::value_ptr(projectionViewMatrix));
 
-    scene.chunk.draw();
+    scene.world.draw(scene.controller.getPosition());
 }
 
 
@@ -246,11 +248,12 @@ void createScene(Scene& scene) {
 
 void setupController(Scene& scene) {
     scene.controller.setCameraAspect(float(WINDOW_WIDTH) / WINDOW_HEIGHT);
-    scene.controller.setPosition(glm::vec3(-3, 0, 0));
+    scene.controller.setPosition(glm::vec3(-3, 64, 0));
 }
 
 void createChunks(Scene& scene) {
-    scene.chunk.generate(0, 0);
+    //scene.chunk.generate(0, 0);
+    scene.world.generate();
 }
 
 void createShaders(Scene& scene) {
