@@ -22,6 +22,12 @@ public:
     // Renders the world based on where the player is
     void draw(glm::vec3 playerPosition);
 
+
+    void removeBlock(int x, int y, int z);
+
+    // Casts a ray and returns first intersecting block-coordinates
+    glm::ivec3 getRayBlockIntersection(glm::vec3 rayOrigin, glm::vec3 ray);
+
 private:
 
     std::map<std::pair<int, int>, Chunk> chunks;

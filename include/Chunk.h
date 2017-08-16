@@ -23,8 +23,12 @@ public:
     void draw();
 
 
-    // Sets the chunk's neighbor
-    void setNeighbor(Chunk* neighbor, int dx, int dy);
+    // Sets the chunk's neighbor in a direction
+    void setNeighbor(Chunk* neighbor, int dx, int dz);
+
+
+    // Removes a block and return it's old type (global coordinates)
+    unsigned removeBlock(int x, int y, int z);
 
 private:
 
@@ -44,7 +48,10 @@ private:
 
 
     // The chunk's neighbors
-    Chunk* neighbors[4];
+    Chunk* neighbors[4] = {nullptr};
+
+    // Converts a direction to a neighbor
+    Chunk* getNeighbor(int dx, int dz);
 
 
     // Returns a reference to the block at location (x, y, z)
@@ -57,19 +64,24 @@ private:
     // Converts global to local coordinates for chunk (y doesn't change)
     void convertToLocal(int *x, int *z);
 
+    // Converts local to global coordinates for chunk (y doesn't change)
+    void convertToGlobal(int *x, int *z);
+
     // Adds a block's face to the building vertices
     void addFace(int x, int y, int z, int dir_x, int dir_y, int dir_z, unsigned block);
-
     // Vector of vertices and indices used for building the model
     std::vector<Vertex> vertices;
+
     std::vector<GLuint> indices;
+
 
     // Generates the chunk's model
     void generateModel();
 
-
     // Returns a height value for coordinates
     int getHeightmapValue(int x, int z);
+
+    void updateNeighboringChunks();
 };
 
 #endif //MINECRAFT_CLONE_CHUNK_H

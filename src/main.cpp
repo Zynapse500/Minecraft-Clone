@@ -41,21 +41,21 @@ GLFWwindow *window;
 GLFWwindow *createWindow();
 
 void setFullscreen(bool fullscreen);
-void toggleFullscreen();
 
+void toggleFullscreen();
 
 
 void setupCallbacks(GLFWwindow *window);
 
-void createScene(Scene& scene);
+void createScene(Scene &scene);
 
-void setupController(Scene& scene);
+void setupController(Scene &scene);
 
-void createChunks(Scene& scene);
+void createChunks(Scene &scene);
 
-void createShaders(Scene& scene);
+void createShaders(Scene &scene);
 
-void createTextures(Scene& scene);
+void createTextures(Scene &scene);
 
 // Callbacks
 void onWindowResize(GLFWwindow *window, int width, int height);
@@ -65,9 +65,9 @@ void onWindowFocused(GLFWwindow *window, int focused);
 void onKeyPressed(GLFWwindow *window, int key, int scancode, int action, int mods);
 
 // Gamestate change
-void update(Scene& scene, float deltaTime);
+void update(Scene &scene, float deltaTime);
 
-void render(Scene& scene);
+void render(Scene &scene);
 
 
 glm::vec2 mouseDelta = glm::vec2(0);
@@ -135,14 +135,14 @@ int main() {
 }
 
 
-void update(Scene& scene, float deltaTime) {
+void update(Scene &scene, float deltaTime) {
     auto time = float(glfwGetTime());
 
     scene.controller.rotate(0.003f * mouseDelta.x, -0.003f * mouseDelta.y);
 
     float moveSpeed = 4;
 
-    if(glfwGetKey(window, GLFW_KEY_LEFT_SHIFT))
+    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT))
         moveSpeed *= 10;
 
 
@@ -163,7 +163,7 @@ void update(Scene& scene, float deltaTime) {
     scene.world.update(scene.controller.getPosition());
 }
 
-void render(Scene& scene) {
+void render(Scene &scene) {
     scene.texture.bind();
     scene.shader.use();
 
@@ -218,6 +218,16 @@ void onKeyPressed(GLFWwindow *window, int key, int scancode, int action, int mod
                 toggleFullscreen();
                 break;
 
+            case GLFW_KEY_SPACE: {
+                glm::vec3 position = currentScene->controller.getPosition();
+                glm::vec3 direction = currentScene->controller.getDirection();
+
+                glm::ivec3 blockPosition = currentScene->world.getRayBlockIntersection(position, direction);
+
+                currentScene->world.removeBlock(blockPosition.x, blockPosition.y, blockPosition.z);
+            }
+                break;
+
             default:
                 break;
         }
@@ -254,19 +264,20 @@ GLFWwindow *createWindow() {
 }
 
 void setFullscreen(bool fullscreen) {
-    if(fullscreen){
-        GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+    if (fullscreen) {
+        GLFWmonitor *monitor = glfwGetPrimaryMonitor();
 
-        const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+        const GLFWvidmode *mode = glfwGetVideoMode(monitor);
         glfwSetWindowMonitor(window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
     } else {
-        GLFWmonitor* monitor = glfwGetPrimaryMonitor();
-        const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+        GLFWmonitor *monitor = glfwGetPrimaryMonitor();
+        const GLFWvidmode *mode = glfwGetVideoMode(monitor);
 
         int x, y;
         glfwGetMonitorPos(monitor, &x, &y);
 
-        glfwSetWindowMonitor(window, nullptr, x + (mode->width - WINDOW_WIDTH) / 2, y + (mode->height - WINDOW_HEIGHT) / 2, WINDOW_WIDTH, WINDOW_HEIGHT, GLFW_DONT_CARE);
+        glfwSetWindowMonitor(window, nullptr, x + (mode->width - WINDOW_WIDTH) / 2,
+                             y + (mode->height - WINDOW_HEIGHT) / 2, WINDOW_WIDTH, WINDOW_HEIGHT, GLFW_DONT_CARE);
     }
 }
 
@@ -283,24 +294,24 @@ void setupCallbacks(GLFWwindow *window) {
     glfwSetKeyCallback(window, onKeyPressed);
 }
 
-void createScene(Scene& scene) {
+void createScene(Scene &scene) {
     setupController(scene);
     createChunks(scene);
     createShaders(scene);
     createTextures(scene);
 }
 
-void setupController(Scene& scene) {
+void setupController(Scene &scene) {
     scene.controller.setCameraAspect(float(WINDOW_WIDTH) / WINDOW_HEIGHT);
     scene.controller.setPosition(glm::vec3(0, 66, 0));
 }
 
-void createChunks(Scene& scene) {
+void createChunks(Scene &scene) {
     //scene.chunk.generate(0, 0);
     scene.world.generate();
 }
 
-void createShaders(Scene& scene) {
+void createShaders(Scene &scene) {
     char *vertexSource = readFile("resources/shader.vert");
     char *fragmentSource = readFile("resources/shader.frag");
 
@@ -319,7 +330,7 @@ void createShaders(Scene& scene) {
     delete[] fragmentSource;
 }
 
-void createTextures(Scene& scene) {
+void createTextures(Scene &scene) {
     unsigned width = 10,
             height = 10;
 
