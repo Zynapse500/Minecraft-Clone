@@ -11,7 +11,6 @@
 #include <glm/gtx/string_cast.hpp>
 
 
-
 /*
  * CONSTANTS
  */

@@ -3,18 +3,26 @@ project(Minecraft_Clone)
 
 set(CMAKE_CXX_STANDARD 11)
 
-
 include_directories(include)
 
-# Include OpenGL headers and libraries
-set(OPENGL_DIRECTORY "D:/Programming/OpenGL - MinGW")
-include_directories("${OPENGL_DIRECTORY}/Includes")
-link_directories("${OPENGL_DIRECTORY}/Libraries")
+# OS specific settings
+if(WIN32)
+    set(DEPENDENCIES -lopengl32 -lglew32 -lglfw3)
+    # Include OpenGL headers and libraries
+    set(OPENGL_DIRECTORY "D:/Programming/OpenGL - MinGW")
+    include_directories("${OPENGL_DIRECTORY}/Includes")
+    link_directories("${OPENGL_DIRECTORY}/Libraries")
+endif(WIN32)
+
+if(UNIX)
+    set(DEPENDENCIES -lGL -lGLU -lglfw3 -lX11 -lXxf86vm -lXrandr -lpthread -lXi -ldl -lXinerama -lXcursor)
+endif(UNIX)
 
 
 # Set the paths to all the sourcefiles
 set(SOURCE_FILES
-        src/External/glew.c include/GL/glew.h include/IMG/lodepng.h src/External/lodepng.cpp
+        src/External/glew.c include/GL/glew.h
+        include/IMG/lodepng.h src/External/lodepng.cpp
         include/Batch/glm.h
 
         include/ReadFile.h include/Camera.h
@@ -30,7 +38,7 @@ set(SOURCE_FILES
 add_executable(Minecraft_Clone ${SOURCE_FILES})
 
 
-target_link_libraries(Minecraft_Clone -lopengl32 -lglew32 -lglfw3)
+target_link_libraries(Minecraft_Clone ${DEPENDENCIES})
 
 
 

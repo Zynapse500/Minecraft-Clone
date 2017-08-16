@@ -37,7 +37,13 @@ Scene *currentScene;
 GLFWwindow *window;
 
 
+// Window
 GLFWwindow *createWindow();
+
+void setFullscreen(bool fullscreen);
+void toggleFullscreen();
+
+
 
 void setupCallbacks(GLFWwindow *window);
 
@@ -73,6 +79,7 @@ int main() {
     std::cout << "Hello, World!" << std::endl;
 
     window = createWindow();
+    setFullscreen(false);
 
     // Enable OpenGL features
     glEnable(GL_MULTISAMPLE);
@@ -135,6 +142,10 @@ void update(Scene& scene, float deltaTime) {
 
     float moveSpeed = 4;
 
+    if(glfwGetKey(window, GLFW_KEY_LEFT_SHIFT))
+        moveSpeed *= 10;
+
+
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         scene.controller.move(FORWARD, moveSpeed * deltaTime);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
@@ -149,6 +160,7 @@ void update(Scene& scene, float deltaTime) {
     if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
         scene.controller.move(DOWN, moveSpeed * deltaTime);
 
+    scene.world.update(scene.controller.getPosition());
 }
 
 void render(Scene& scene) {
@@ -202,6 +214,10 @@ void onKeyPressed(GLFWwindow *window, int key, int scancode, int action, int mod
             }
                 break;
 
+            case GLFW_KEY_F11:
+                toggleFullscreen();
+                break;
+
             default:
                 break;
         }
@@ -224,6 +240,10 @@ GLFWwindow *createWindow() {
     GLFWwindow *window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Minecraft Clone", nullptr, nullptr);
     glfwMakeContextCurrent(window);
 
+
+    glfwSwapInterval(0);
+
+
     if (glewInit() == 1) {
         throw std::runtime_error("Failed to init GLEW!");
     }
@@ -231,6 +251,30 @@ GLFWwindow *createWindow() {
     setupCallbacks(window);
 
     return window;
+}
+
+void setFullscreen(bool fullscreen) {
+    if(fullscreen){
+        GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+
+        const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+        glfwSetWindowMonitor(window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
+    } else {
+        GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+        const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+
+        int x, y;
+        glfwGetMonitorPos(monitor, &x, &y);
+
+        glfwSetWindowMonitor(window, nullptr, x + (mode->width - WINDOW_WIDTH) / 2, y + (mode->height - WINDOW_HEIGHT) / 2, WINDOW_WIDTH, WINDOW_HEIGHT, GLFW_DONT_CARE);
+    }
+}
+
+void toggleFullscreen() {
+    static bool fullscreen = false;
+
+    fullscreen = glfwGetWindowMonitor(window) == nullptr;
+    setFullscreen(fullscreen);
 }
 
 void setupCallbacks(GLFWwindow *window) {
@@ -248,7 +292,7 @@ void createScene(Scene& scene) {
 
 void setupController(Scene& scene) {
     scene.controller.setCameraAspect(float(WINDOW_WIDTH) / WINDOW_HEIGHT);
-    scene.controller.setPosition(glm::vec3(-3, 64, 0));
+    scene.controller.setPosition(glm::vec3(0, 66, 0));
 }
 
 void createChunks(Scene& scene) {

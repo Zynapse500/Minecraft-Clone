@@ -22,6 +22,10 @@ public:
     // Renders the chunk
     void draw();
 
+
+    // Sets the chunk's neighbor
+    void setNeighbor(Chunk* neighbor, int dx, int dy);
+
 private:
 
     // The model of the chunk
@@ -38,6 +42,11 @@ private:
     // Block-map of the chunk
     unsigned blockMap[size * size * height];
 
+
+    // The chunk's neighbors
+    Chunk* neighbors[4];
+
+
     // Returns a reference to the block at location (x, y, z)
     unsigned int * getBlockGlobal(int x, int y, int z);
 
@@ -51,11 +60,16 @@ private:
     // Adds a block's face to the building vertices
     void addFace(int x, int y, int z, int dir_x, int dir_y, int dir_z, unsigned block);
 
-
     // Vector of vertices and indices used for building the model
     std::vector<Vertex> vertices;
     std::vector<GLuint> indices;
 
+    // Generates the chunk's model
+    void generateModel();
+
+
+    // Returns a height value for coordinates
+    int getHeightmapValue(int x, int z);
 };
 
 #endif //MINECRAFT_CLONE_CHUNK_H

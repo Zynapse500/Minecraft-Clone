@@ -9,11 +9,21 @@ void Chunk::generate(int _x, int _z) {
     chunk_x = _x;
     chunk_z = _z;
 
+    // Generate heightmap
+    int heightmap[size][size];
+    for (int x = 0; x < size; x++) {
+        for (int z = 0; z < size; ++z) {
+            heightmap[x][z] = getHeightmapValue(x + _x * size, z + _z * size);
+        }
+    }
+
     // Generate block-map
     for (int x = 0; x < size; x++) {
         for (int y = 0; y < height; ++y) {
             for (int z = 0; z < size; ++z) {
-                if (rand() % 64 > y)
+                int height = heightmap[x][z];
+
+                if (y <= height)
                     *getBlockLocal(x, y, z) = 1;
                 else
                     *getBlockLocal(x, y, z) = 0;
@@ -22,42 +32,7 @@ void Chunk::generate(int _x, int _z) {
     }
 
 
-    // Generate model
-    /* METHOD:
-     * For each block, add each face if visible
-     */
-    glm::ivec3 directions[] = {
-            glm::ivec3(1, 0, 0), glm::ivec3(-1, 0, 0),
-            glm::ivec3(0, 1, 0), glm::ivec3(0, -1, 0),
-            glm::ivec3(0, 0, 1), glm::ivec3(0, 0, -1),
-    };
-
-    for (int x = 0; x < size; ++x) {
-        for (int y = 0; y < height; ++y) {
-            for (int z = 0; z < size; ++z) {
-                unsigned* currentBlock = getBlockLocal(x, y, z);
-
-                if (*currentBlock != 0) {
-                    // For every direction check adjacent blocks and add face
-                    for (auto& dir : directions) {
-                        auto *adjacentBlock = getBlockLocal(x + dir.x,
-                                                             y + dir.y,
-                                                             z + dir.z);
-
-                        if(adjacentBlock == nullptr || *adjacentBlock == 0)
-                            addFace(x, y, z, dir.x, dir.y, dir.z, *currentBlock);
-                    }
-                }
-            }
-        }
-    }
-
-
-    model.setVertices(this->vertices.data(), this->vertices.size());
-    model.setIndices(this->indices.data(), this->indices.size());
-
-    this->vertices.clear();
-    this->indices.clear();
+    generateModel();
 }
 
 unsigned int *Chunk::getBlockGlobal(int x, int y, int z) {
@@ -110,10 +85,10 @@ void Chunk::draw() {
 
 void Chunk::addFace(int x, int y, int z, int dir_x, int dir_y, int dir_z, unsigned block) {
 
-    x += chunk_x;
-    z += chunk_z;
+    x += this->size * chunk_x;
+    z += this->size * chunk_z;
 
-    GLuint vertexCount = this->vertices.size();
+    auto vertexCount = GLuint(this->vertices.size());
     GLuint indices[] = {
             vertexCount + 0,
             vertexCount + 1,
@@ -159,4 +134,50 @@ void Chunk::addFace(int x, int y, int z, int dir_x, int dir_y, int dir_z, unsign
     for (auto& index : indices) {
         this->indices.push_back(index);
     }
+}
+
+void Chunk::generateModel() {
+/* METHOD:
+     * For each block, add each face if visible
+     */
+    glm::ivec3 directions[] = {
+            glm::ivec3(1, 0, 0), glm::ivec3(-1, 0, 0),
+            glm::ivec3(0, 1, 0), glm::ivec3(0, -1, 0),
+            glm::ivec3(0, 0, 1), glm::ivec3(0, 0, -1),
+    };
+
+    for (int x = 0; x < size; ++x) {
+        for (int y = 0; y < height; ++y) {
+            for (int z = 0; z < size; ++z) {
+                unsigned* currentBlock = getBlockLocal(x, y, z);
+
+                if (*currentBlock != 0) {
+                    // For every direction check adjacent blocks and add face
+                    for (auto& dir : directions) {
+                        auto *adjacentBlock = getBlockLocal(x + dir.x,
+                                                            y + dir.y,
+                                                            z + dir.z);
+
+                        if(adjacentBlock == nullptr || *adjacentBlock == 0)
+                            addFace(x, y, z, dir.x, dir.y, dir.z, *currentBlock);
+                    }
+                }
+            }
+        }
+    }
+
+
+    model.setVertices(this->vertices.data(), GLuint(this->vertices.size()));
+    model.setIndices(this->indices.data(), GLuint(this->indices.size()));
+
+    this->vertices.clear();
+    this->indices.clear();
+}
+
+int Chunk::getHeightmapValue(int x, int z) {
+
+    int a = (abs(x) % 64);
+    int b = (abs(z) % 64);
+
+    return a + b;
 }
