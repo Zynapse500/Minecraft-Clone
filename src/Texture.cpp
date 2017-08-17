@@ -21,6 +21,10 @@ void Texture::bind() {
     glBindTexture(GL_TEXTURE_2D, this->h_texture);
 }
 
+void Texture::unbind() {
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
+
 void Texture::setMinMagFilter(int min, int mag) {
     bind();
 

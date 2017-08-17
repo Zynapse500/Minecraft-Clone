@@ -30,6 +30,12 @@ public:
     // Removes a block and return it's old type (global coordinates)
     unsigned removeBlock(int x, int y, int z);
 
+    // Returns the type of a block (global coordinates)
+    unsigned getBlock(int x, int y, int z);
+
+
+    void placeBlock(int x, int y, int z, unsigned int type);
+
 private:
 
     // The model of the chunk
@@ -78,9 +84,14 @@ private:
     // Generates the chunk's model
     void generateModel();
 
+    // Determines whether or not the model of this mesh need to update
+    bool blocksHaveChanged = false;
+
+
     // Returns a height value for coordinates
     int getHeightmapValue(int x, int z);
 
+    // Updates the meshes of the neighboring chunkgs
     void updateNeighboringChunks();
 };
 

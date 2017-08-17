@@ -41,6 +41,7 @@ public:
 
     // Renders the model
     void draw();
+    void draw(GLenum mode);
 
     // Sets the vertices of the model
     void setVertices(Vertex* vertices, GLuint count);

@@ -16,9 +16,9 @@ public:
     // Sets the pixels of the texture
     void setPixels(unsigned char* pixels, int width, int height);
 
-    // Binds this texture
+    // Binds/unbinds this texture
     void bind();
-
+    void unbind();
 
     // Sets the min and mag mode of the texture
     void setMinMagFilter(int min, int mag);

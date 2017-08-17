@@ -79,74 +79,83 @@ void World::draw(glm::vec3 playerPosition) {
 glm::ivec3 World::getRayBlockIntersection(glm::vec3 rayOrigin, glm::vec3 ray) {
     const float distance = 5;
 
-    glm::ivec3 blockStart = rayOrigin;
-    glm::ivec3 blockEnd = rayOrigin + distance * ray;
+    glm::vec3 rayStart = rayOrigin;
+    glm::vec3 rayEnd = rayOrigin + distance * ray;
 
-    int stepXY = (abs(blockEnd.y - blockStart.y) > abs(blockEnd.x - blockStart.x));
-    if(stepXY) {
-        std::swap(blockStart.x, blockStart.y);
-        std::swap(blockEnd.x, blockEnd.y);
+    glm::vec3 delta = glm::abs(rayEnd - rayStart);
+    glm::vec3 dt_delta = 1.0f / delta;
+
+    float t = 0;
+
+    glm::ivec3 currentBlock = glm::floor(rayStart);
+
+    int n = 1;
+    glm::ivec3 increment;
+    glm::vec3 t_next;
+
+    for (int i = 0; i < 3; ++i) {
+        if (delta[i] == 0) {
+            increment[i] = 0;
+            t_next[i] = dt_delta[i];
+        } else if (rayEnd[i] > rayStart[i]) {
+            increment[i] = 1;
+            n += int(floor(rayEnd[i])) - currentBlock[i];
+            t_next[i] = (floorf(rayStart[i]) + 1 - rayStart[i]) * dt_delta[i];
+        } else {
+            increment[i] = -1;
+            n += currentBlock[i] - int(floor(rayEnd[i]));
+            t_next[i] = (rayStart[i] - floorf(rayStart[i])) * dt_delta[i];
+        }
     }
 
-    int stepXZ = (abs(blockEnd.z - blockStart.z) > abs(blockEnd.x - blockStart.x));
-    if(stepXZ) {
-        std::swap(blockStart.x, blockStart.z);
-        std::swap(blockEnd.x, blockEnd.z);
-    }
-
-    glm::ivec3 delta = glm::abs(blockEnd - blockStart);
-
-    float errorXY = delta.x / 2.f;
-    float errorXZ = delta.x / 2.f;
-
-    glm::ivec3 step {
-            blockStart.x > blockEnd.x ? -1 : 1,
-            blockStart.y > blockEnd.y ? -1 : 1,
-            blockStart.z > blockEnd.z ? -1 : 1
+    auto argmin = [](glm::vec3 &a) -> int {
+        int min = 0;
+        for (int i = 1; i < 3; ++i) {
+            if (a[i] < a[min]) {
+                min = i;
+            }
+        }
+        return min;
     };
 
-    int y = blockStart.y;
-    int z = blockStart.z;
-
-    for (int x = blockStart.x; x < blockEnd.x; x += step.x) {
-        glm::ivec3 point(x, y, z);
-
-        if(stepXZ)
-            std::swap(point.x, point.z);
-        if(stepXY)
-            std::swap(point.x, point.y);
-
-
-
-        // Use point
-        std::cout << glm::to_string(point) << std::endl;
-        removeBlock(point.x, point.y, point.z);
-
-
-        errorXY -= delta.y;
-        errorXZ -= delta.z;
-
-        if(errorXY < 0) {
-            y += step.y;
-            errorXY += delta.x;
+    for (; n > 0; --n) {
+        Chunk *currentChunk = getChunk(currentBlock.x, currentBlock.z);
+        if (currentChunk != nullptr) {
+            if (currentChunk->getBlock(currentBlock.x, currentBlock.y, currentBlock.z) != 0) {
+                return currentBlock;
+            }
         }
-        if(errorXZ < 0) {
-            z += step.z;
-            errorXZ += delta.x;
-        }
+
+        int min = argmin(t_next);
+        currentBlock[min] += increment[min];
+        t = t_next[min];
+        t_next[min] += dt_delta[min];
     }
 
-
-    return glm::ivec3();
+    return glm::ivec3(-1);
 }
 
 void World::removeBlock(int x, int y, int z) {
+    Chunk *chunk = getChunk(x, z);
+    if (chunk != nullptr) {
+        chunk->removeBlock(x, y, z);
+    }
+}
 
+void World::placeBlock(int x, int y, int z, unsigned type) {
+    Chunk *chunk = getChunk(x, z);
+    if (chunk != nullptr) {
+        chunk->placeBlock(x, y, z, type);
+    }
+}
+
+Chunk *World::getChunk(int x, int z) {
     auto chunkPosition = std::make_pair<int, int>(int(floorf(x / 16.f)),
                                                   int(floorf(z / 16.f)));
-
     auto chunkIterator = chunks.find(chunkPosition);
     if (chunkIterator != chunks.end()) {
-        (*chunkIterator).second.removeBlock(x, y, z);
+        return &(*chunkIterator).second;
     }
+
+    return nullptr;
 }

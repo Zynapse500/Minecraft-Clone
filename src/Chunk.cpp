@@ -30,9 +30,7 @@ void Chunk::generate(int _x, int _z) {
         }
     }
 
-
-    generateModel();
-    updateNeighboringChunks();
+    blocksHaveChanged = true;
 }
 
 unsigned int *Chunk::getBlockGlobal(int x, int y, int z) {
@@ -44,24 +42,24 @@ unsigned int *Chunk::getBlockGlobal(int x, int y, int z) {
     };
 
     if (!isInRage(x, 0, size)) {
-        Chunk* neighbor = getNeighbor(x > 0 ? 1 : -1, 0);
+        Chunk *neighbor = getNeighbor(x > 0 ? 1 : -1, 0);
 
-        if(neighbor == nullptr)
+        if (neighbor == nullptr)
             return nullptr;
 
         convertToGlobal(&x, &z);
-        unsigned* block = neighbor->getBlockGlobal(x, y, z);
+        unsigned *block = neighbor->getBlockGlobal(x, y, z);
 
         return block;
     }
     if (!isInRage(z, 0, size)) {
-        Chunk* neighbor = getNeighbor(0, z > 0 ? 1 : -1);
+        Chunk *neighbor = getNeighbor(0, z > 0 ? 1 : -1);
 
-        if(neighbor == nullptr)
+        if (neighbor == nullptr)
             return nullptr;
 
         convertToGlobal(&x, &z);
-        unsigned* block = neighbor->getBlockGlobal(x, y, z);
+        unsigned *block = neighbor->getBlockGlobal(x, y, z);
 
         return block;
     }
@@ -104,6 +102,11 @@ void Chunk::convertToGlobal(int *x, int *z) {
 }
 
 void Chunk::draw() {
+    if (blocksHaveChanged) {
+        generateModel();
+        updateNeighboringChunks();
+    }
+
     model.draw();
 }
 
@@ -181,9 +184,8 @@ void Chunk::generateModel() {
                                                              y + dir.y,
                                                              z + dir.z + size * chunk_z);
 
-                        if(adjacentBlock != nullptr)
-                            if (*adjacentBlock == 0)
-                                addFace(x, y, z, dir.x, dir.y, dir.z, *currentBlock);
+                        if (adjacentBlock == nullptr || *adjacentBlock == 0)
+                            addFace(x, y, z, dir.x, dir.y, dir.z, *currentBlock);
                     }
                 }
             }
@@ -196,6 +198,8 @@ void Chunk::generateModel() {
 
     this->vertices.clear();
     this->indices.clear();
+
+    blocksHaveChanged = false;
 }
 
 int Chunk::getHeightmapValue(int x, int z) {
@@ -232,15 +236,14 @@ Chunk *Chunk::getNeighbor(int dx, int dz) {
 }
 
 unsigned Chunk::removeBlock(int x, int y, int z) {
-    unsigned* block = getBlockGlobal(x, y, z);
+    unsigned *block = getBlockGlobal(x, y, z);
 
-    if(block != nullptr) {
+    if (block != nullptr) {
         unsigned oldType = *block;
 
         *block = 0;
 
-        generateModel();
-        updateNeighboringChunks();
+        blocksHaveChanged = true;
 
         return oldType;
     }
@@ -248,11 +251,26 @@ unsigned Chunk::removeBlock(int x, int y, int z) {
     return unsigned(-1);
 }
 
+void Chunk::placeBlock(int x, int y, int z, unsigned int type) {
+    unsigned *block = getBlockGlobal(x, y, z);
+    if (block != nullptr) {
+        *block = type;
+        blocksHaveChanged = true;
+    }
+}
+
 void Chunk::updateNeighboringChunks() {
     // Update the neighbor's meshes
-    for(auto& neighbor : neighbors) {
-        if(neighbor != nullptr) {
+    for (auto &neighbor : neighbors) {
+        if (neighbor != nullptr) {
             neighbor->generateModel();
         }
     }
+}
+
+unsigned Chunk::getBlock(int x, int y, int z) {
+    unsigned* block = getBlockGlobal(x, y, z);
+    if(block == nullptr)
+        return 0;
+    return *block;
 }

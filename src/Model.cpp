@@ -12,16 +12,20 @@ Model::Model() {
 }
 
 void Model::draw() {
+    draw(GL_TRIANGLES);
+}
+
+void Model::draw(GLenum mode) {
     if(this->indexCount == 0)
     {
         glBindVertexArray(h_vao);
         glBindBuffer(GL_ARRAY_BUFFER, h_vbo);
-        glDrawArrays(GL_TRIANGLES, 0, vertexCount);
+        glDrawArrays(mode, 0, vertexCount);
         glBindVertexArray(0);
     } else {
         glBindVertexArray(h_vao);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, h_indexBuffer);
-        glDrawElements(GL_TRIANGLES, this->indexCount, GL_UNSIGNED_INT, nullptr);
+        glDrawElements(mode, this->indexCount, GL_UNSIGNED_INT, nullptr);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
         glBindVertexArray(0);
     }

@@ -28,8 +28,12 @@ struct Scene {
 
     Texture texture;
 
-//    Chunk chunk;
     World world;
+
+
+    glm::ivec3 selectedBlock = glm::ivec3(-1);
+    Model selectionMarker;
+    Model crosshair;
 };
 
 
@@ -47,15 +51,17 @@ void toggleFullscreen();
 
 void setupCallbacks(GLFWwindow *window);
 
-void createScene(Scene &scene);
+void createScene(Scene& scene);
 
-void setupController(Scene &scene);
+void setupController(Scene& scene);
 
-void createChunks(Scene &scene);
+void createChunks(Scene& scene);
 
-void createShaders(Scene &scene);
+void createShaders(Scene& scene);
 
-void createTextures(Scene &scene);
+void createTextures(Scene& scene);
+
+void createModels(Scene& scene);
 
 // Callbacks
 void onWindowResize(GLFWwindow *window, int width, int height);
@@ -64,13 +70,16 @@ void onWindowFocused(GLFWwindow *window, int focused);
 
 void onKeyPressed(GLFWwindow *window, int key, int scancode, int action, int mods);
 
-// Gamestate change
-void update(Scene &scene, float deltaTime);
+void onButtonPressed(GLFWwindow *window, int button, int action, int mods);
 
-void render(Scene &scene);
+// Gamestate change
+void update(Scene& scene, float deltaTime);
+
+void render(Scene& scene);
 
 
 glm::vec2 mouseDelta = glm::vec2(0);
+
 
 void updateMouseDelta();
 
@@ -86,6 +95,11 @@ int main() {
     glClearColor(0.2, 0.2, 0.2, 1.0);
 
     glEnable(GL_DEPTH_TEST);
+
+    glCullFace(GL_BACK);
+    glFrontFace(GL_CCW);
+    glEnable(GL_CULL_FACE);
+
 
 
     // Create scene
@@ -135,16 +149,18 @@ int main() {
 }
 
 
-void update(Scene &scene, float deltaTime) {
+void update(Scene& scene, float deltaTime) {
     auto time = float(glfwGetTime());
 
     scene.controller.rotate(0.003f * mouseDelta.x, -0.003f * mouseDelta.y);
 
     float moveSpeed = 4;
 
-    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT))
+    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
         moveSpeed *= 10;
-
+        if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
+            moveSpeed *= 4;
+    }
 
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         scene.controller.move(FORWARD, moveSpeed * deltaTime);
@@ -161,17 +177,37 @@ void update(Scene &scene, float deltaTime) {
         scene.controller.move(DOWN, moveSpeed * deltaTime);
 
     scene.world.update(scene.controller.getPosition());
+
+    scene.selectedBlock = scene.world.getRayBlockIntersection(scene.controller.getPosition(),
+                                                              scene.controller.getDirection());
 }
 
-void render(Scene &scene) {
+void render(Scene& scene) {
+
     scene.texture.bind();
     scene.shader.use();
 
     glm::mat4 projectionViewMatrix = scene.controller.getCombinedMatrix();
     glUniformMatrix4fv(scene.shader.getUniformLocation("projectionViewMatrix"), 1, 0,
                        glm::value_ptr(projectionViewMatrix));
+    glUniformMatrix4fv(scene.shader.getUniformLocation("modelMatrix"), 1, 0,
+                       glm::value_ptr(glm::mat4()));
 
     scene.world.draw(scene.controller.getPosition());
+
+    scene.texture.unbind();
+
+
+    glLineWidth(2);
+
+    if(scene.selectedBlock.y >= 0) {
+        glUniformMatrix4fv(scene.shader.getUniformLocation("modelMatrix"), 1, 0,
+                           glm::value_ptr(glm::translate(glm::mat4(), glm::vec3(scene.selectedBlock))));
+        scene.selectionMarker.draw(GL_LINES);
+    }
+
+    glUseProgram(0);
+    scene.crosshair.draw(GL_POINTS);
 }
 
 
@@ -218,22 +254,38 @@ void onKeyPressed(GLFWwindow *window, int key, int scancode, int action, int mod
                 toggleFullscreen();
                 break;
 
-            case GLFW_KEY_SPACE: {
-                glm::vec3 position = currentScene->controller.getPosition();
-                glm::vec3 direction = currentScene->controller.getDirection();
-
-                glm::ivec3 blockPosition = currentScene->world.getRayBlockIntersection(position, direction);
-
-                currentScene->world.removeBlock(blockPosition.x, blockPosition.y, blockPosition.z);
-            }
-                break;
-
             default:
                 break;
         }
     }
 }
 
+
+void onButtonPressed(GLFWwindow *window, int button, int action, int mods) {
+    if (action == GLFW_PRESS) {
+        glm::ivec3& selectedBlock = currentScene->selectedBlock;
+
+        switch (button) {
+
+            case GLFW_MOUSE_BUTTON_LEFT:
+                if (selectedBlock.y >= 0) {
+                    currentScene->world.removeBlock(selectedBlock.x, selectedBlock.y, selectedBlock.z);
+                }
+                break;
+
+
+            case GLFW_MOUSE_BUTTON_RIGHT:
+                if (selectedBlock.y >= 0) {
+                    currentScene->world.placeBlock(selectedBlock.x, selectedBlock.y + 1, selectedBlock.z, 1);
+                }
+                break;
+
+
+            default:
+                break;
+        }
+    }
+}
 
 /*
  * SETUP
@@ -292,26 +344,28 @@ void setupCallbacks(GLFWwindow *window) {
     glfwSetWindowSizeCallback(window, onWindowResize);
     glfwSetWindowFocusCallback(window, onWindowFocused);
     glfwSetKeyCallback(window, onKeyPressed);
+    glfwSetMouseButtonCallback(window, onButtonPressed);
 }
 
-void createScene(Scene &scene) {
+void createScene(Scene& scene) {
     setupController(scene);
     createChunks(scene);
     createShaders(scene);
     createTextures(scene);
+    createModels(scene);
 }
 
-void setupController(Scene &scene) {
+void setupController(Scene& scene) {
     scene.controller.setCameraAspect(float(WINDOW_WIDTH) / WINDOW_HEIGHT);
-    scene.controller.setPosition(glm::vec3(0, 66, 0));
+    scene.controller.setPosition(glm::vec3(-2, 0.5, 2));
 }
 
-void createChunks(Scene &scene) {
+void createChunks(Scene& scene) {
     //scene.chunk.generate(0, 0);
     scene.world.generate();
 }
 
-void createShaders(Scene &scene) {
+void createShaders(Scene& scene) {
     char *vertexSource = readFile("resources/shader.vert");
     char *fragmentSource = readFile("resources/shader.frag");
 
@@ -330,7 +384,7 @@ void createShaders(Scene &scene) {
     delete[] fragmentSource;
 }
 
-void createTextures(Scene &scene) {
+void createTextures(Scene& scene) {
     unsigned width = 10,
             height = 10;
 
@@ -340,6 +394,51 @@ void createTextures(Scene &scene) {
     scene.texture.setPixels(pixels.data(), width, height);
     scene.texture.setMinMagFilter(GL_LINEAR, GL_NEAREST);
     scene.texture.setWrapMode(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+}
+
+void createModels(Scene& scene) {
+    /*
+     * Selection marker
+     */
+    Vertex selection_vertices[] = {
+            Vertex(glm::vec3(0, 0, 0)),
+            Vertex(glm::vec3(0, 0, 1)),
+            Vertex(glm::vec3(1, 0, 0)),
+            Vertex(glm::vec3(1, 0, 1)),
+
+            Vertex(glm::vec3(0, 1, 0)),
+            Vertex(glm::vec3(0, 1, 1)),
+            Vertex(glm::vec3(1, 1, 0)),
+            Vertex(glm::vec3(1, 1, 1)),
+    };
+
+    GLuint selection_indices[] = {
+            0, 1,
+            0, 2,
+            0, 4,
+            5, 4,
+            5, 7,
+            5, 1,
+            6, 4,
+            6, 7,
+            6, 2,
+            3, 2,
+            3, 1,
+            3, 7
+    };
+
+    scene.selectionMarker.setVertices(selection_vertices, 8);
+    scene.selectionMarker.setIndices(selection_indices, 24);
+
+
+    /*
+     * Crosshair
+     */
+    Vertex crosshair_vertices[] = {
+            Vertex(glm::vec3(0, 0, 0)),
+    };
+
+    scene.crosshair.setVertices(crosshair_vertices, 1);
 }
 
 void updateMouseDelta() {
