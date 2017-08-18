@@ -15,6 +15,17 @@
 #include "IMG/lodepng.h"
 
 
+
+/*
+ * TODO:
+ * [ ] Add texture regions and atlases
+ * [ ] Add multiple block types
+ * [ ] Add perlin-noise generator
+ * [ ] Add world generation
+ */
+
+
+
 #define WINDOW_WIDTH 800
 #define WINDOW_HEIGHT 600
 
