@@ -20,7 +20,7 @@ void World::update(glm::vec3 playerPosition) {
     chunkPosition.x = int(floorf(playerPosition.x / 16));
     chunkPosition.y = int(floorf(playerPosition.z / 16));
 
-    auto pairToString = [](std::pair<int, int> &pair) {
+    auto pairToString = [](std::pair<int, int>& pair) {
         return "(" + std::to_string(pair.first) + ", " + std::to_string(pair.second) + ")";
     };
 
@@ -35,7 +35,7 @@ void World::update(glm::vec3 playerPosition) {
 
         if (chunks.find(currentChunk) == chunks.end()) {
 
-            Chunk &createdChunk = chunks[currentChunk];
+            Chunk& createdChunk = chunks[currentChunk];
 
             glm::ivec2 neighborDirections[] = {
                     glm::ivec2(1, 0),
@@ -44,13 +44,13 @@ void World::update(glm::vec3 playerPosition) {
                     glm::ivec2(0, -1)
             };
 
-            for (auto &neighborDirection : neighborDirections) {
+            for (auto& neighborDirection : neighborDirections) {
                 auto neighborPosition = std::make_pair(currentChunk.first + neighborDirection.x,
                                                        currentChunk.second + neighborDirection.y);
                 auto neighbor = chunks.find(neighborPosition);
 
                 if (neighbor != chunks.end()) {
-                    Chunk &neighborChunk = (*neighbor).second;
+                    Chunk& neighborChunk = (*neighbor).second;
                     neighborChunk.setNeighbor(&createdChunk, -neighborDirection.x, -neighborDirection.y);
                     createdChunk.setNeighbor(&neighborChunk, neighborDirection.x, neighborDirection.y);
                 }
@@ -71,12 +71,12 @@ void World::update(glm::vec3 playerPosition) {
 }
 
 void World::draw(glm::vec3 playerPosition) {
-    for (auto &chunk : chunks) {
+    for (auto& chunk : chunks) {
         chunk.second.draw();
     }
 }
 
-glm::ivec3 World::getRayBlockIntersection(glm::vec3 rayOrigin, glm::vec3 ray) {
+std::tuple<glm::ivec3, glm::ivec3> World::getRayBlockIntersection(glm::vec3 rayOrigin, glm::vec3 ray) {
     const float distance = 5;
 
     glm::vec3 rayStart = rayOrigin;
@@ -108,31 +108,26 @@ glm::ivec3 World::getRayBlockIntersection(glm::vec3 rayOrigin, glm::vec3 ray) {
         }
     }
 
-    auto argmin = [](glm::vec3 &a) -> int {
-        int min = 0;
-        for (int i = 1; i < 3; ++i) {
-            if (a[i] < a[min]) {
-                min = i;
-            }
-        }
-        return min;
-    };
-
     for (; n > 0; --n) {
         Chunk *currentChunk = getChunk(currentBlock.x, currentBlock.z);
         if (currentChunk != nullptr) {
-            if (currentChunk->getBlock(currentBlock.x, currentBlock.y, currentBlock.z) != 0) {
-                return currentBlock;
+            unsigned currentBlockType = currentChunk->getBlock(currentBlock.x, currentBlock.y, currentBlock.z);
+            if (currentBlockType != 0) {
+
+                // Find normal of intersection
+                glm::ivec3 normal = getRayBlockIntersectionNormal(rayOrigin, ray, currentBlock, currentBlockType);
+
+                return std::make_tuple(currentBlock, normal);
             }
         }
 
-        int min = argmin(t_next);
+        int min = glm::argmin(t_next);
         currentBlock[min] += increment[min];
         t = t_next[min];
         t_next[min] += dt_delta[min];
     }
 
-    return glm::ivec3(-1);
+    return std::make_tuple(glm::ivec3(-1), glm::ivec3(0));
 }
 
 void World::removeBlock(int x, int y, int z) {
@@ -158,4 +153,26 @@ Chunk *World::getChunk(int x, int z) {
     }
 
     return nullptr;
+}
+
+glm::ivec3 World::getRayBlockIntersectionNormal(glm::vec3 origin, glm::vec3 ray, glm::ivec3 block, unsigned int type) {
+
+    glm::vec3 delta_t;
+
+    for (int i = 0; i < 3; ++i) {
+        if (ray[i] == 0) {
+            delta_t[i] = -std::numeric_limits<float>::max();
+        } else if (ray[i] > 0) {
+            delta_t[i] = (block[i] - origin[i]) / ray[i];
+        } else {
+            delta_t[i] = ((block[i] + 1) - origin[i]) / ray[i];
+        }
+    }
+
+    int axis = glm::argmax(delta_t);
+
+    glm::ivec3 normal(0);
+    normal[axis] = ray[axis] < 0 ? 1 : -1;
+
+    return normal;
 }

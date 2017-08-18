@@ -30,7 +30,7 @@ public:
 
     // Casts a ray and returns first intersecting block-coordinates
     // Returns (y = -1) if no block was found
-    glm::ivec3 getRayBlockIntersection(glm::vec3 rayOrigin, glm::vec3 ray);
+    std::tuple<glm::ivec3, glm::ivec3> getRayBlockIntersection(glm::vec3 rayOrigin, glm::vec3 ray);
 
 private:
 
@@ -39,6 +39,9 @@ private:
 
     // Returns the chunk that contains specified block coordinates
     Chunk *getChunk(int x, int z);
+
+    // Returns the normal of the ray's intersection with a block
+    glm::ivec3 getRayBlockIntersectionNormal(glm::vec3 origin, glm::vec3 ray, glm::ivec3 block, unsigned int type);
 };
 
 

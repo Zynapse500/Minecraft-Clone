@@ -32,6 +32,8 @@ struct Scene {
 
 
     glm::ivec3 selectedBlock = glm::ivec3(-1);
+    glm::ivec3 selectedNormal = glm::ivec3(0);
+
     Model selectionMarker;
     Model crosshair;
 };
@@ -178,8 +180,9 @@ void update(Scene& scene, float deltaTime) {
 
     scene.world.update(scene.controller.getPosition());
 
-    scene.selectedBlock = scene.world.getRayBlockIntersection(scene.controller.getPosition(),
-                                                              scene.controller.getDirection());
+    std::tie(scene.selectedBlock, scene.selectedNormal) = scene.world.getRayBlockIntersection(
+            scene.controller.getPosition(),
+            scene.controller.getDirection());
 }
 
 void render(Scene& scene) {
@@ -200,7 +203,7 @@ void render(Scene& scene) {
 
     glLineWidth(2);
 
-    if(scene.selectedBlock.y >= 0) {
+    if (scene.selectedBlock.y >= 0) {
         glUniformMatrix4fv(scene.shader.getUniformLocation("modelMatrix"), 1, 0,
                            glm::value_ptr(glm::translate(glm::mat4(), glm::vec3(scene.selectedBlock))));
         scene.selectionMarker.draw(GL_LINES);
@@ -264,6 +267,7 @@ void onKeyPressed(GLFWwindow *window, int key, int scancode, int action, int mod
 void onButtonPressed(GLFWwindow *window, int button, int action, int mods) {
     if (action == GLFW_PRESS) {
         glm::ivec3& selectedBlock = currentScene->selectedBlock;
+        glm::ivec3& selectedNormal = currentScene->selectedNormal;
 
         switch (button) {
 
@@ -276,7 +280,8 @@ void onButtonPressed(GLFWwindow *window, int button, int action, int mods) {
 
             case GLFW_MOUSE_BUTTON_RIGHT:
                 if (selectedBlock.y >= 0) {
-                    currentScene->world.placeBlock(selectedBlock.x, selectedBlock.y + 1, selectedBlock.z, 1);
+                    glm::ivec3 placePosition = selectedBlock + selectedNormal;
+                    currentScene->world.placeBlock(placePosition.x, placePosition.y, placePosition.z, 1);
                 }
                 break;
 
@@ -357,7 +362,7 @@ void createScene(Scene& scene) {
 
 void setupController(Scene& scene) {
     scene.controller.setCameraAspect(float(WINDOW_WIDTH) / WINDOW_HEIGHT);
-    scene.controller.setPosition(glm::vec3(-2, 0.5, 2));
+    scene.controller.setPosition(glm::vec3(0.5, 64.5, 0.5));
 }
 
 void createChunks(Scene& scene) {
