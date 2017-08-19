@@ -407,7 +407,7 @@ void createTextures(Scene& scene) {
     std::vector<unsigned char> pixels;
     lodepng::decode(pixels, width, height, "resources/textures/grass.png");
 
-    scene.texture.setPixels(pixels.data(), width, height);
+    scene.texture.setPixelData(pixels.data(), width, height);
     scene.texture.setMinMagFilter(GL_LINEAR, GL_NEAREST);
     scene.texture.setWrapMode(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
 }

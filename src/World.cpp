@@ -27,9 +27,7 @@ void World::update(glm::vec3 playerPosition) {
     int x = 0, y = 0;
     int dx = 0, dy = -1;
 
-    int r = 20;
-
-    for (int i = 0; i < r * r; ++i) {
+    for (int i = 0; i < visibleChunkDiameter * visibleChunkDiameter; ++i) {
 
         auto currentChunk = std::make_pair(chunkPosition.x + x, chunkPosition.y + y);
 

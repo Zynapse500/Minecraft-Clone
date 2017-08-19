@@ -7,6 +7,21 @@
 
 #include <GL/glew.h>
 
+
+/*
+ * Stores the data required for a texture
+ */
+struct PixelData {
+    unsigned char* pixels;
+    int width;
+    int height;
+};
+
+
+
+/*
+ * Wrapper around GL texture
+ */
 class Texture {
 public:
 
@@ -14,7 +29,8 @@ public:
     Texture();
 
     // Sets the pixels of the texture
-    void setPixels(unsigned char* pixels, int width, int height);
+    void setPixelData(unsigned char *pixels, int width, int height);
+    void setPixelData(const PixelData &data);
 
     // Binds/unbinds this texture
     void bind();

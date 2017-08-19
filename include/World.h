@@ -42,6 +42,9 @@ private:
 
     // Returns the normal of the ray's intersection with a block
     glm::ivec3 getRayBlockIntersectionNormal(glm::vec3 origin, glm::vec3 ray, glm::ivec3 block, unsigned int type);
+
+    // The size of the visible area (square size)
+    int visibleChunkDiameter = 8;
 };
 
 

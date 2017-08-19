@@ -1,3 +1,5 @@
+
+#define GLEW_STATIC
 /*
 ** The OpenGL Extension Wrangler Library
 ** Copyright (C) 2008-2017, Nigel Stewart <nigels[]users sourceforge net>
