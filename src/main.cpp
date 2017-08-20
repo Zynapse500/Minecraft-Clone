@@ -4,13 +4,16 @@
 #include <GLFW/glfw3.h>
 #include <Chunk.h>
 #include <World.h>
+#include <SpriteRenderer.h>
 
 
 #include "Shader.h"
+
 #include "Texture.h"
+#include "TextureStitching.h"
+
 
 #include "FirstPersonController.h"
-
 #include "ReadFile.h"
 #include "IMG/lodepng.h"
 
@@ -42,6 +45,12 @@ struct Scene {
     World world;
 
 
+    Texture textureAtlas;
+    std::vector<TextureRegion> textureRegions;
+
+    SpriteRenderer renderer;
+
+
     glm::ivec3 selectedBlock = glm::ivec3(-1);
     glm::ivec3 selectedNormal = glm::ivec3(0);
 
@@ -49,6 +58,8 @@ struct Scene {
     Model crosshair;
 };
 
+
+int currentRegion = 0;
 
 Scene *currentScene;
 GLFWwindow *window;
@@ -64,17 +75,17 @@ void toggleFullscreen();
 
 void setupCallbacks(GLFWwindow *window);
 
-void createScene(Scene& scene);
+void createScene(Scene &scene);
 
-void setupController(Scene& scene);
+void setupController(Scene &scene);
 
-void createChunks(Scene& scene);
+void createChunks(Scene &scene);
 
-void createShaders(Scene& scene);
+void createShaders(Scene &scene);
 
-void createTextures(Scene& scene);
+void createTextures(Scene &scene);
 
-void createModels(Scene& scene);
+void createModels(Scene &scene);
 
 // Callbacks
 void onWindowResize(GLFWwindow *window, int width, int height);
@@ -86,9 +97,9 @@ void onKeyPressed(GLFWwindow *window, int key, int scancode, int action, int mod
 void onButtonPressed(GLFWwindow *window, int button, int action, int mods);
 
 // Gamestate change
-void update(Scene& scene, float deltaTime);
+void update(Scene &scene, float deltaTime);
 
-void render(Scene& scene);
+void render(Scene &scene);
 
 
 glm::vec2 mouseDelta = glm::vec2(0);
@@ -162,7 +173,7 @@ int main() {
 }
 
 
-void update(Scene& scene, float deltaTime) {
+void update(Scene &scene, float deltaTime) {
     auto time = float(glfwGetTime());
 
     scene.controller.rotate(0.003f * mouseDelta.x, -0.003f * mouseDelta.y);
@@ -196,7 +207,7 @@ void update(Scene& scene, float deltaTime) {
             scene.controller.getDirection());
 }
 
-void render(Scene& scene) {
+void render(Scene &scene) {
 
     scene.texture.bind();
     scene.shader.use();
@@ -222,6 +233,18 @@ void render(Scene& scene) {
 
     glUseProgram(0);
     scene.crosshair.draw(GL_POINTS);
+
+
+    glm::ivec2 windowSize;
+    glfwGetWindowSize(window, &windowSize.x, &windowSize.y);
+
+    projectionViewMatrix = glm::ortho(0.0f, float(windowSize.x), float(windowSize.y), 0.0f);
+    scene.renderer.begin(projectionViewMatrix);
+
+    scene.renderer.draw(scene.textureRegions[currentRegion], glm::vec2(0, 0), glm::vec2(128, 128));
+    scene.renderer.draw(scene.textureAtlas, glm::vec2(0, 128), glm::vec2(128, 128));
+
+    scene.renderer.end();
 }
 
 
@@ -268,6 +291,16 @@ void onKeyPressed(GLFWwindow *window, int key, int scancode, int action, int mod
                 toggleFullscreen();
                 break;
 
+
+            case GLFW_KEY_UP:
+                currentRegion = glm::clamp(currentRegion + 1, 0, int(currentScene->textureRegions.size() - 1));
+                break;
+
+            case GLFW_KEY_DOWN:
+                currentRegion = glm::clamp(currentRegion - 1, 0, int(currentScene->textureRegions.size() - 1));
+                break;
+
+
             default:
                 break;
         }
@@ -277,8 +310,8 @@ void onKeyPressed(GLFWwindow *window, int key, int scancode, int action, int mod
 
 void onButtonPressed(GLFWwindow *window, int button, int action, int mods) {
     if (action == GLFW_PRESS) {
-        glm::ivec3& selectedBlock = currentScene->selectedBlock;
-        glm::ivec3& selectedNormal = currentScene->selectedNormal;
+        glm::ivec3 &selectedBlock = currentScene->selectedBlock;
+        glm::ivec3 &selectedNormal = currentScene->selectedNormal;
 
         switch (button) {
 
@@ -363,7 +396,7 @@ void setupCallbacks(GLFWwindow *window) {
     glfwSetMouseButtonCallback(window, onButtonPressed);
 }
 
-void createScene(Scene& scene) {
+void createScene(Scene &scene) {
     setupController(scene);
     createChunks(scene);
     createShaders(scene);
@@ -371,17 +404,17 @@ void createScene(Scene& scene) {
     createModels(scene);
 }
 
-void setupController(Scene& scene) {
+void setupController(Scene &scene) {
     scene.controller.setCameraAspect(float(WINDOW_WIDTH) / WINDOW_HEIGHT);
     scene.controller.setPosition(glm::vec3(0.5, 64.5, 0.5));
 }
 
-void createChunks(Scene& scene) {
+void createChunks(Scene &scene) {
     //scene.chunk.generate(0, 0);
     scene.world.generate();
 }
 
-void createShaders(Scene& scene) {
+void createShaders(Scene &scene) {
     char *vertexSource = readFile("resources/shader.vert");
     char *fragmentSource = readFile("resources/shader.frag");
 
@@ -400,19 +433,37 @@ void createShaders(Scene& scene) {
     delete[] fragmentSource;
 }
 
-void createTextures(Scene& scene) {
-    unsigned width = 10,
-            height = 10;
+void createTextures(Scene &scene) {
+    PixelData grass;
 
-    std::vector<unsigned char> pixels;
-    lodepng::decode(pixels, width, height, "resources/textures/grass.png");
+    lodepng_decode32_file(&grass.pixels, &grass.width, &grass.height, "resources/textures/grass.png");
 
-    scene.texture.setPixelData(pixels.data(), width, height);
+    scene.texture.setPixelData(grass);
     scene.texture.setMinMagFilter(GL_LINEAR, GL_NEAREST);
     scene.texture.setWrapMode(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+
+
+
+    const char* texturePaths[] = {
+            "resources/textures/grass.png",
+            "resources/textures/dirt.png",
+            "resources/textures/stone.png",
+    };
+    const int textureCount = sizeof(texturePaths) / sizeof(texturePaths[0]);
+    auto* pixelDatas = new PixelData[textureCount];
+
+    for(int i = 0; i < textureCount; i++) {
+        auto& data = pixelDatas[i];
+        auto& path = texturePaths[i];
+
+        lodepng_decode32_file(&data.pixels, &data.width, &data.height, path);
+    }
+
+    scene.textureRegions.resize(unsigned(textureCount));
+    scene.textureAtlas = stitchTextures(pixelDatas, scene.textureRegions.data(), textureCount);
 }
 
-void createModels(Scene& scene) {
+void createModels(Scene &scene) {
     /*
      * Selection marker
      */

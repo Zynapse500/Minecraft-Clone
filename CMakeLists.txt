@@ -36,6 +36,10 @@ set(SOURCE_FILES
         src/Shader.cpp include/Shader.h
         src/Texture.cpp include/Texture.h
         src/TextureRegion.cpp include/TextureRegion.h
+        src/TextureStitching.cpp include/TextureStitching.h
+
+    # Rendering
+        src/SpriteRenderer.cpp include/SpriteRenderer.h
 
     # Camera and controls
         include/Camera.h
@@ -44,7 +48,7 @@ set(SOURCE_FILES
     # World
         src/Chunk.cpp include/Chunk.h
         src/World.cpp include/World.h
-        src/TextureStitching.cpp include/TextureStitching.h)
+        )
 
 add_executable(Minecraft_Clone ${SOURCE_FILES})
 

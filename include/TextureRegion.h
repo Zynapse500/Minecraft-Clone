@@ -12,7 +12,7 @@
 /*
  * Represents a region withing another texture
  */
-class TextureRegion {
+struct TextureRegion {
     glm::vec2 offset;
     glm::vec2 size;
 
