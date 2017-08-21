@@ -10,6 +10,10 @@ if(WIN32)
     set(DEPENDENCIES -lopengl32 -lglfw3)
     # Include OpenGL headers and libraries
     set(OPENGL_DIRECTORY "C:/Users/Christofer/Documents/C++/OpenGL/MinGW/OpenGL")
+    if(NOT EXISTS ${OPENGL_DIRECTORY})
+        set(OPENGL_DIRECTORY "D:/Programming/OpenGL - MinGW")
+    endif()
+
     include_directories("${OPENGL_DIRECTORY}/Includes")
     link_directories("${OPENGL_DIRECTORY}/Libraries")
 endif(WIN32)
@@ -48,7 +52,7 @@ set(SOURCE_FILES
     # World
         src/Chunk.cpp include/Chunk.h
         src/World.cpp include/World.h
-        )
+        src/Block.cpp include/Block.h)
 
 add_executable(Minecraft_Clone ${SOURCE_FILES})
 

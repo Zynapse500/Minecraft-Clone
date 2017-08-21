@@ -20,11 +20,12 @@
 
 
 /*
- * TODO:
- * [ ] Add texture regions and atlases
- * [ ] Add multiple block types
- * [ ] Add perlin-noise generator
- * [ ] Add world generation
+ * TODO: [X] Add texture regions and atlases
+ * TODO: [ ] Add multiple block types
+ * TODO: [ ] Add perlin-noise generator
+ * TODO: [ ] Add world generation
+ * TODO: [ ] Move chunkloading to another thread
+ * TODO: [ ] Unload chunks outside of range
  */
 
 
