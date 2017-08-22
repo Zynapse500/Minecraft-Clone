@@ -24,7 +24,7 @@ Block::appendFaces(const Block **neighbors, glm::ivec3 position) const {
 
         GLuint vertexStart = vertices.size();
 
-        const TextureRegion& region = textures[i % n_textures];
+        const TextureRegion& region = textures[getTextureIndex(BlockSide(i)) % n_textures];
         float u = region.offset.x,
                 v = region.offset.y,
                 us = region.size.x,
@@ -32,35 +32,59 @@ Block::appendFaces(const Block **neighbors, glm::ivec3 position) const {
 
         if (neighbor == nullptr || !neighbor->opaque) {
             if (i == 0) {
-                vertices.emplace_back(glm::vec3(x + 1, y + 1, z + 1), glm::vec2(u + us, v + vs), glm::vec3(1, 0, 0));
-                vertices.emplace_back(glm::vec3(x + 1, y, z + 1), glm::vec2(u + us, v), glm::vec3(1, 0, 0));
-                vertices.emplace_back(glm::vec3(x + 1, y, z), glm::vec2(u, v), glm::vec3(1, 0, 0));
-                vertices.emplace_back(glm::vec3(x + 1, y + 1, z), glm::vec2(u, v + vs), glm::vec3(1, 0, 0));
+                vertices.emplace_back(glm::vec3(x + 1, y + 1, z + 1),
+                                      glm::vec2(u + us, v), glm::vec3(1, 0, 0));
+                vertices.emplace_back(glm::vec3(x + 1, y, z + 1),
+                                      glm::vec2(u + us, v + vs), glm::vec3(1, 0, 0));
+                vertices.emplace_back(glm::vec3(x + 1, y, z),
+                                      glm::vec2(u, v + vs), glm::vec3(1, 0, 0));
+                vertices.emplace_back(glm::vec3(x + 1, y + 1, z),
+                                      glm::vec2(u, v), glm::vec3(1, 0, 0));
             } else if (i == 1) {
-                vertices.emplace_back(glm::vec3(x, y + 1, z), glm::vec2(u + us, v + vs), glm::vec3(-1, 0, 0));
-                vertices.emplace_back(glm::vec3(x, y, z), glm::vec2(u + us, v), glm::vec3(-1, 0, 0));
-                vertices.emplace_back(glm::vec3(x, y, z + 1), glm::vec2(u, v), glm::vec3(-1, 0, 0));
-                vertices.emplace_back(glm::vec3(x, y + 1, z + 1), glm::vec2(u, v + vs), glm::vec3(-1, 0, 0));
+                vertices.emplace_back(glm::vec3(x, y + 1, z),
+                                      glm::vec2(u + us, v), glm::vec3(-1, 0, 0));
+                vertices.emplace_back(glm::vec3(x, y, z),
+                                      glm::vec2(u + us, v + vs), glm::vec3(-1, 0, 0));
+                vertices.emplace_back(glm::vec3(x, y, z + 1),
+                                      glm::vec2(u, v + vs), glm::vec3(-1, 0, 0));
+                vertices.emplace_back(glm::vec3(x, y + 1, z + 1),
+                                      glm::vec2(u, v), glm::vec3(-1, 0, 0));
             } else if (i == 2) {
-                vertices.emplace_back(glm::vec3(x, y + 1, z + 1), glm::vec2(u + us, v + vs), glm::vec3(0, 1, 0));
-                vertices.emplace_back(glm::vec3(x + 1, y + 1, z + 1), glm::vec2(u + us, v), glm::vec3(0, 1, 0));
-                vertices.emplace_back(glm::vec3(x + 1, y + 1, z), glm::vec2(u, v), glm::vec3(0, 1, 0));
-                vertices.emplace_back(glm::vec3(x, y + 1, z), glm::vec2(u, v + vs), glm::vec3(0, 1, 0));
+                vertices.emplace_back(glm::vec3(x, y + 1, z + 1),
+                                      glm::vec2(u + us, v), glm::vec3(0, 1, 0));
+                vertices.emplace_back(glm::vec3(x + 1, y + 1, z + 1),
+                                      glm::vec2(u + us, v + vs), glm::vec3(0, 1, 0));
+                vertices.emplace_back(glm::vec3(x + 1, y + 1, z),
+                                      glm::vec2(u, v + vs), glm::vec3(0, 1, 0));
+                vertices.emplace_back(glm::vec3(x, y + 1, z),
+                                      glm::vec2(u, v), glm::vec3(0, 1, 0));
             } else if (i == 3) {
-                vertices.emplace_back(glm::vec3(x, y, z), glm::vec2(u + us, v + vs), glm::vec3(0, -1, 0));
-                vertices.emplace_back(glm::vec3(x + 1, y, z), glm::vec2(u + us, v), glm::vec3(0, -1, 0));
-                vertices.emplace_back(glm::vec3(x + 1, y, z + 1), glm::vec2(u, v), glm::vec3(0, -1, 0));
-                vertices.emplace_back(glm::vec3(x, y, z + 1), glm::vec2(u, v + vs), glm::vec3(0, -1, 0));
+                vertices.emplace_back(glm::vec3(x, y, z),
+                                      glm::vec2(u + us, v), glm::vec3(0, -1, 0));
+                vertices.emplace_back(glm::vec3(x + 1, y, z),
+                                      glm::vec2(u + us, v + vs), glm::vec3(0, -1, 0));
+                vertices.emplace_back(glm::vec3(x + 1, y, z + 1),
+                                      glm::vec2(u, v + vs), glm::vec3(0, -1, 0));
+                vertices.emplace_back(glm::vec3(x, y, z + 1),
+                                      glm::vec2(u, v), glm::vec3(0, -1, 0));
             } else if (i == 4) {
-                vertices.emplace_back(glm::vec3(x, y + 1, z + 1), glm::vec2(u + us, v + vs), glm::vec3(0, 0, 1));
-                vertices.emplace_back(glm::vec3(x, y, z + 1), glm::vec2(u + us, v), glm::vec3(0, 0, 1));
-                vertices.emplace_back(glm::vec3(x + 1, y, z + 1), glm::vec2(u, v), glm::vec3(0, 0, 1));
-                vertices.emplace_back(glm::vec3(x + 1, y + 1, z + 1), glm::vec2(u, v + vs), glm::vec3(0, 0, 1));
+                vertices.emplace_back(glm::vec3(x, y + 1, z + 1),
+                                      glm::vec2(u + us, v), glm::vec3(0, 0, 1));
+                vertices.emplace_back(glm::vec3(x, y, z + 1),
+                                      glm::vec2(u + us, v + vs), glm::vec3(0, 0, 1));
+                vertices.emplace_back(glm::vec3(x + 1, y, z + 1),
+                                      glm::vec2(u, v + vs), glm::vec3(0, 0, 1));
+                vertices.emplace_back(glm::vec3(x + 1, y + 1, z + 1),
+                                      glm::vec2(u, v), glm::vec3(0, 0, 1));
             } else {
-                vertices.emplace_back(glm::vec3(x + 1, y + 1, z), glm::vec2(u + us, v + vs), glm::vec3(0, 0, -1));
-                vertices.emplace_back(glm::vec3(x + 1, y, z), glm::vec2(u + us, v), glm::vec3(0, 0, -1));
-                vertices.emplace_back(glm::vec3(x, y, z), glm::vec2(u, v), glm::vec3(0, 0, -1));
-                vertices.emplace_back(glm::vec3(x, y + 1, z), glm::vec2(u, v + vs), glm::vec3(0, 0, -1));
+                vertices.emplace_back(glm::vec3(x + 1, y + 1, z),
+                                      glm::vec2(u + us, v), glm::vec3(0, 0, -1));
+                vertices.emplace_back(glm::vec3(x + 1, y, z),
+                                      glm::vec2(u + us, v + vs), glm::vec3(0, 0, -1));
+                vertices.emplace_back(glm::vec3(x, y, z),
+                                      glm::vec2(u, v + vs), glm::vec3(0, 0, -1));
+                vertices.emplace_back(glm::vec3(x, y + 1, z),
+                                      glm::vec2(u, v), glm::vec3(0, 0, -1));
             }
 
             indices.push_back(vertexStart + 0);
@@ -83,6 +107,10 @@ std::vector<PixelData> Block::loadTextures() const {
     lodepng_decode32_file(&data.pixels, &data.width, &data.height, "resources/textures/nan.png");
 
     return pixelData;
+}
+
+unsigned Block::getTextureIndex(BlockSide side) const {
+    return 0;
 }
 
 
@@ -116,7 +144,7 @@ void BlockManager::loadTextures() {
     // Create a texture atlas
     blockTextureAtlas = new Texture;
     *blockTextureAtlas = stitchTextures(pixelData.data(), regions.data(), totalTextureCount);
-    blockTextureAtlas->setMinMagFilter(GL_NEAREST, GL_NEAREST);
+    blockTextureAtlas->setMinMagFilter(GL_LINEAR, GL_NEAREST);
 
     // Assign texture regions of atlas to blocks
     auto regionIterator = regions.begin();

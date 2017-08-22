@@ -259,7 +259,8 @@ void render(Scene &scene) {
     projectionViewMatrix = glm::ortho(0.0f, float(windowSize.x), float(windowSize.y), 0.0f);
     scene.renderer.begin(projectionViewMatrix);
 
-    scene.renderer.draw(*BlockManager::blockTextureAtlas, glm::vec2(0, 0), glm::vec2(128, 128));
+    scene.renderer.scale(glm::vec2(2.f));
+    scene.renderer.draw(*BlockManager::blockTextureAtlas, glm::vec2(0, 0));
 
     scene.renderer.end();
 }

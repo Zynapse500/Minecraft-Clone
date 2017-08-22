@@ -15,6 +15,16 @@
 #include "Model.h"
 
 
+enum class BlockSide {
+    RIGHT,
+    LEFT,
+    TOP,
+    BOTTOM,
+    FRONT,
+    BACK,
+};
+
+
 class BlockManager;
 
 /*
@@ -25,10 +35,14 @@ class Block {
 
 protected:
 
-
-public:
     // Texture regions used for rendering each face
     std::vector<TextureRegion> textures;
+
+    // Maps a block's side to a texture
+    // Only defined for "regular" blocks
+    virtual unsigned getTextureIndex(BlockSide side) const;
+
+public:
 
     // Constructor
     Block(bool opaque, bool solid) :

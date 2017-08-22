@@ -23,6 +23,10 @@ Texture stitchTextures(PixelData *pixelDatas, TextureRegion *textureRegions, int
     // The final texture
     Texture& texture = *(new Texture);
 
+    // Number of padding pixels
+    unsigned padding = 4;
+
+
     // All sub-textures
     std::vector<SubTexture> subTextures;
     for (int i = 0; i < count; ++i) {
@@ -35,8 +39,8 @@ Texture stitchTextures(PixelData *pixelDatas, TextureRegion *textureRegions, int
         maxHeight = std::max(subTexture.data.height, maxHeight);
         maxWidth = std::max(subTexture.data.width, maxWidth);
     }
-    maxWidth += 2;
-    maxHeight += 2;
+    maxWidth += padding * 2;
+    maxHeight += padding * 2;
 
     // Determine how many tiles to allocate
     auto horizontalTiles = GLuint(ceilf(sqrtf(count)));
@@ -53,11 +57,11 @@ Texture stitchTextures(PixelData *pixelDatas, TextureRegion *textureRegions, int
     int y = 0;
     for (auto& subTexture : subTextures) {
         unsigned int blit_x = x * maxWidth, blit_y = y * maxHeight;
-        completeData.blitWithPadding(subTexture.data, blit_x, blit_y);
+        completeData.blitWithPadding(subTexture.data, blit_x, blit_y, padding);
 
         subTexture.region.texture = &texture;
-        subTexture.region.offset = glm::vec2(float(blit_x + 1) / completeData.width,
-                                             float(blit_y + 1) / completeData.height);
+        subTexture.region.offset = glm::vec2(float(blit_x + padding) / completeData.width,
+                                             float(blit_y + padding) / completeData.height);
         subTexture.region.size = glm::vec2(float(subTexture.data.width) / completeData.width,
                                            float(subTexture.data.height) / completeData.height);
 

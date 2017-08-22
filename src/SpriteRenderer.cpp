@@ -79,8 +79,8 @@ void SpriteRenderer::draw(Texture &texture, glm::vec2 position, glm::vec2 size) 
     // Position
     float x = position.x,
             y = position.y,
-            w = size.x,
-            h = size.y;
+            w = currentScale.x * size.x,
+            h = currentScale.y * size.y;
 
     // Texture coordinates
     float u = 0,
@@ -110,8 +110,8 @@ void SpriteRenderer::draw(const TextureRegion& region, glm::vec2 position, glm::
     // Position
     float x = position.x,
             y = position.y,
-            w = size.x,
-            h = size.y;
+            w = currentScale.x * size.x,
+            h = currentScale.y * size.y;
 
     // Texture coordinates
     float u = region.offset.x,
@@ -132,5 +132,9 @@ void SpriteRenderer::draw(const TextureRegion& region, glm::vec2 position, glm::
     currentSprite.indices.push_back(startVertex + 2);
     currentSprite.indices.push_back(startVertex + 3);
     currentSprite.indices.push_back(startVertex + 0);
+}
+
+void SpriteRenderer::scale(glm::vec2 scale) {
+    this->currentScale = scale;
 }
 

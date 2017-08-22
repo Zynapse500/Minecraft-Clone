@@ -20,6 +20,9 @@ public:
     // What happens when this block is mined?
     void mine(glm::ivec3 position) const override;
 
+protected:
+    unsigned int getTextureIndex(BlockSide side) const override;
+
 };
 
 

@@ -57,3 +57,11 @@ void Model::setIndices(GLuint *indices, GLuint count) {
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, count * sizeof(GLuint), indices, GL_STATIC_DRAW);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
+
+Model::~Model() {
+    glDeleteBuffers(1, &h_indexBuffer);
+    glDeleteBuffers(1, &h_vbo);
+    glDeleteVertexArrays(1, &h_vao);
+
+    std::cout << "Destroyed model" << std::endl;
+}

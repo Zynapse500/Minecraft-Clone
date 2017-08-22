@@ -22,8 +22,8 @@ struct PixelData {
 
     // "pastes" other data's pixels into these at (x, y)
     // Adds a 1-pixel border around the blitted image
-    // The total pasted width and height is effectively increased by 2 pixels
-    void blitWithPadding(PixelData& data, unsigned int x, unsigned int y);
+    // The total pasted width and height is effectively increased by (2 * padding) pixels
+    void blitWithPadding(PixelData& data, unsigned int x, unsigned int y, unsigned int padding);
 };
 
 

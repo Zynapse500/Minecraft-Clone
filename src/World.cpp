@@ -15,15 +15,25 @@ void World::generate() {
 
 void World::update(glm::vec3 playerPosition) {
     // Find the chunk closest to the player that is still not generated
-    // within a 5-chunk radius
     glm::ivec2 chunkPosition;
     chunkPosition.x = int(floorf(playerPosition.x / 16));
     chunkPosition.y = int(floorf(playerPosition.z / 16));
 
-    auto pairToString = [](std::pair<int, int>& pair) {
-        return "(" + std::to_string(pair.first) + ", " + std::to_string(pair.second) + ")";
-    };
+    // Remove all chunks outside range
+    for (auto iterator = chunks.begin(); iterator != chunks.end();) {
+        auto& key = iterator->first;
+        glm::ivec2 position(key.first, key.second);
 
+        if (abs(position.x - chunkPosition.x) + abs(position.y - chunkPosition.y) > visibleChunkDiameter + 1) {
+            std::cout << "Erasing chunk: (" << position.x << ", " << position.y << ")\n";
+            iterator = chunks.erase(iterator);
+        } else {
+            iterator++;
+        }
+    }
+
+
+    // Create chunks within range
     int x = 0, y = 0;
     int dx = 0, dy = -1;
 
@@ -55,17 +65,16 @@ void World::update(glm::vec3 playerPosition) {
             }
 
             createdChunk.generate(currentChunk.first, currentChunk.second);
+
             break;
         }
 
-        if (x == y || (x < 0 && x == -y) ||
-            (x > 0 && x == 1 - y)) {
+        if (x == y || (x < 0 && x == -y) || (x > 0 && x == 1 - y)) {
             auto tmp = dx;
             dx = -dy, dy = tmp;
         }
         x += dx, y += dy;
     }
-
 }
 
 void World::draw(glm::vec3 playerPosition) {

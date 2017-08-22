@@ -52,6 +52,10 @@ public:
     void draw(const TextureRegion& region, glm::vec2 position, glm::vec2 size);
 
 
+
+    // Scales all following drawing by a factor of 'scale'
+    void scale(glm::vec2 scale);
+
 private:
 
     // Groups sprites by texture to reduce state changes
@@ -67,6 +71,9 @@ private:
     // Matrix used for rendering
     glm::mat4 projectionViewMatrix;
 
+
+    // Current scale everything is drawn at
+    glm::vec2 currentScale = glm::vec2(1);
 
     // Renders a batch of sprites
     void flush(Sprite& sprite);

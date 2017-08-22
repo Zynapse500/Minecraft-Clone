@@ -39,6 +39,9 @@ public:
     // Initializes the model's vao
     Model();
 
+    // Destroys all OpenGL instances
+    ~Model();
+
     // Renders the model
     void draw();
     void draw(GLenum mode);

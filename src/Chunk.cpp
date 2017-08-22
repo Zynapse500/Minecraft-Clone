@@ -17,6 +17,7 @@ void Chunk::generate(int _x, int _z) {
             heightmap[x][z] = getHeightmapValue(x + _x * size, z + _z * size);
         }
     }
+
     // Generate block-map
     for (int x = 0; x < size; x++) {
         for (int y = 0; y < height; ++y) {

@@ -16,7 +16,7 @@ void PixelData::blit(const PixelData &data, GLuint destX, GLuint destY) {
     }
 }
 
-void PixelData::blitWithPadding(PixelData& data, unsigned int destX, unsigned int destY) {
+void PixelData::blitWithPadding(PixelData& data, unsigned int destX, unsigned int destY, unsigned int padding) {
 
     auto copyInto = [this, &data](int src_x, int src_y, int dest_x, int dest_y) {
         int startDestinationIndex = ((dest_x) + (dest_y) * this->width) * 4;
@@ -28,7 +28,7 @@ void PixelData::blitWithPadding(PixelData& data, unsigned int destX, unsigned in
 
     for (int y = 0; y < data.height; ++y) {
         for (int x = 0; x < data.width; ++x) {
-            copyInto(x, y, destX + x + 1, destY + y + 1);
+            copyInto(x, y, destX + x + padding, destY + y + padding);
         }
     }
     
@@ -37,20 +37,30 @@ void PixelData::blitWithPadding(PixelData& data, unsigned int destX, unsigned in
      */
     // Horizontal strips
     for (int x = 0; x < data.width; ++x) {
-        copyInto(x, 0, destX + x + 1, destY);
-        copyInto(x, data.height - 1, destX + x + 1, destY + data.height + 1);
+        for (int y = 0; y < padding; ++y) {
+            copyInto(x, 0, destX + x + padding, destY + y);
+            copyInto(x, data.height - 1, destX + x + padding, destY + data.height + padding + y);
+        }
     }
     // Vertical strips
     for (int y = 0; y < data.height; ++y) {
-        copyInto(0, y, destX, destY + y + 1);
-        copyInto(data.width - 1, y, destX + data.width + 1, destY + y + 1);
+        for (int x = 0; x < padding; ++x) {
+            copyInto(0, y, destX + x, destY + y + padding);
+            copyInto(data.width - 1, y, destX + data.height + padding + x, destY + y + padding);
+        }
+    }
+
+
+    for (int x = 0; x < padding; ++x) {
+        for (int y = 0; y < padding; ++y) {
+            copyInto(0, 0, destX + x, destY + y);
+            copyInto(0, data.height - 1, destX + x, destY + data.height + padding + y);
+            copyInto(data.width - 1, 0, destX + data.width + padding + x, destY + y);
+            copyInto(data.width - 1, data.height - 1, destX + data.width + padding + x, destY + data.height + padding + y);
+        }
     }
 
     // Corners
-    copyInto(0, 0, destX, destY);
-    copyInto(0, data.height - 1, destX, destY + data.height + 1);
-    copyInto(data.width - 1, 0, destX + data.width + 1, destY);
-    copyInto(data.width - 1, data.height - 1, destX + data.width + 1, destY + data.height + 1);
 }
 
 
