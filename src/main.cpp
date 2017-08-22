@@ -23,6 +23,7 @@
 /*
  * TODO: [X] Add texture regions and atlases
  * TODO: [X] Add multiple block types
+ * TODO: [ ] Add macro for easier addition of block types
  * TODO: [ ] Add perlin-noise generator
  * TODO: [ ] Add world generation
  * TODO: [ ] Move chunkloading to another thread
