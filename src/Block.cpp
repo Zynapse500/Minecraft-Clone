@@ -103,8 +103,7 @@ std::vector<PixelData> Block::loadTextures() const {
 
     std::vector<PixelData> pixelData(1);
 
-    PixelData& data = pixelData[0];
-    lodepng_decode32_file(&data.pixels, &data.width, &data.height, "resources/textures/nan.png");
+    pixelData[0].load("resources/textures/nan.png");
 
     return pixelData;
 }

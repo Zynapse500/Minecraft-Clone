@@ -17,6 +17,10 @@ struct PixelData {
     unsigned int width = 0;
     unsigned int height = 0;
 
+    PixelData();
+
+    PixelData(const char* path);
+
     // "pastes" other data's pixels into these at (x, y)
     void blit(const PixelData &data, GLuint destX, GLuint destY);
 
@@ -24,6 +28,9 @@ struct PixelData {
     // Adds a 1-pixel border around the blitted image
     // The total pasted width and height is effectively increased by (2 * padding) pixels
     void blitWithPadding(PixelData& data, unsigned int x, unsigned int y, unsigned int padding);
+
+    // Loads a png image from disk
+    void load(const char* path);
 };
 
 

@@ -24,8 +24,20 @@ void World::update(glm::vec3 playerPosition) {
         auto& key = iterator->first;
         glm::ivec2 position(key.first, key.second);
 
-        if (abs(position.x - chunkPosition.x) + abs(position.y - chunkPosition.y) > visibleChunkDiameter + 1) {
-            std::cout << "Erasing chunk: (" << position.x << ", " << position.y << ")\n";
+        if (abs(position.x - chunkPosition.x) + abs(position.y - chunkPosition.y) > visibleChunkDiameter) {
+            // Set all the neighbors referencing this chunk to nullptr
+            Chunk& chunk = iterator->second;
+            glm::ivec2 directions[] = {
+                    glm::ivec2(1, 0), glm::ivec2(-1, 0),
+                    glm::ivec2(0, 1), glm::ivec2(0, -1)
+            };
+            for (auto&& direction : directions) {
+                Chunk* neighbor = chunk.getNeighbor(direction.x, direction.y);
+                if(neighbor != nullptr) {
+                    neighbor->setNeighbor(nullptr, -direction.x, -direction.y);
+                }
+            }
+
             iterator = chunks.erase(iterator);
         } else {
             iterator++;

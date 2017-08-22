@@ -13,10 +13,9 @@ Stone::Stone(): Block(true, true) {
 }
 
 std::vector<PixelData> Stone::loadTextures() const {
-    std::vector<PixelData> pixelData(1);
-
-    PixelData& data = pixelData[0];
-    lodepng_decode32_file(&data.pixels, &data.width, &data.height, "resources/textures/stone.png");
+    std::vector<PixelData> pixelData = {
+            "resources/textures/stone.png"
+    };
 
     return pixelData;
 }

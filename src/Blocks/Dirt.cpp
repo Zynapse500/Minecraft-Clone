@@ -9,10 +9,9 @@ Dirt::Dirt(): Block(true, true) {
 }
 
 std::vector<PixelData> Dirt::loadTextures() const {
-    std::vector<PixelData> pixelData(1);
-
-    PixelData& data = pixelData[0];
-    lodepng_decode32_file(&data.pixels, &data.width, &data.height, "resources/textures/dirt.png");
+    std::vector<PixelData> pixelData = {
+            "resources/textures/dirt.png"
+    };
 
     return pixelData;
 }

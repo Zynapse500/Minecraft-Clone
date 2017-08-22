@@ -62,6 +62,4 @@ Model::~Model() {
     glDeleteBuffers(1, &h_indexBuffer);
     glDeleteBuffers(1, &h_vbo);
     glDeleteVertexArrays(1, &h_vao);
-
-    std::cout << "Destroyed model" << std::endl;
 }

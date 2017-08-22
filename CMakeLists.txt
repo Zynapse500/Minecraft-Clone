@@ -43,6 +43,9 @@ set(SOURCE_FILES
         src/TextureRegion.cpp include/TextureRegion.h
         src/TextureStitching.cpp include/TextureStitching.h
 
+        src/FractalNoise.cpp include/FractalNoise.h
+        src/Perlin.cpp include/Perlin.h
+
     # Rendering
         src/SpriteRenderer.cpp include/SpriteRenderer.h
 
@@ -53,7 +56,16 @@ set(SOURCE_FILES
     # World
         src/Chunk.cpp include/Chunk.h
         src/World.cpp include/World.h
-        src/Block.cpp include/Block.h src/Blocks/Grass.cpp src/Blocks/Grass.h src/Blocks/AggregateBlockRegister.h src/Blocks/Stone.cpp src/Blocks/Stone.h src/Blocks/Dirt.cpp src/Blocks/Dirt.h src/Blocks/Air.cpp src/Blocks/Air.h src/Blocks/AggregateBlockRegister.cpp)
+
+    # Blocks
+        src/Block.cpp include/Block.h
+        src/Blocks/Grass.cpp src/Blocks/Grass.h
+        src/Blocks/AggregateBlockRegister.cpp src/Blocks/AggregateBlockRegister.h
+        src/Blocks/Stone.cpp src/Blocks/Stone.h
+        src/Blocks/Dirt.cpp src/Blocks/Dirt.h
+        src/Blocks/Air.cpp src/Blocks/Air.h
+
+        )
 
 add_executable(Minecraft_Clone ${SOURCE_FILES})
 

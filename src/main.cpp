@@ -23,11 +23,14 @@
 /*
  * TODO: [X] Add texture regions and atlases
  * TODO: [X] Add multiple block types
- * TODO: [ ] Add macro for easier addition of block types
+ * TODO: [ ] (???) Add macro for easier addition of block types
  * TODO: [ ] Add perlin-noise generator
  * TODO: [ ] Add world generation
+ * TODO:    ( ) Trees
+ * TODO:    ( ) Lakes
+ * TODO:    ( ) Caves
  * TODO: [ ] Move chunkloading to another thread
- * TODO: [ ] Unload chunks outside of range
+ * TODO: [X] Unload chunks outside of range
  */
 
 
@@ -116,7 +119,7 @@ int main() {
 
     // Enable OpenGL features
     glEnable(GL_MULTISAMPLE);
-    glClearColor(0.2, 0.2, 0.2, 1.0);
+    glClearColor(0.2, 0.4, 0.8, 1.0);
 
     glEnable(GL_DEPTH_TEST);
 
@@ -190,7 +193,7 @@ void update(Scene &scene, float deltaTime) {
             frames = 0;
             elapsedTime = 0;
 
-            glfwSetWindowTitle(window, std::to_string(fps).c_str());
+            glfwSetWindowTitle(window, (std::to_string(fps) + "   ---   Position: " + glm::to_string(scene.controller.getPosition())).c_str());
         }
     }
 
@@ -424,7 +427,7 @@ void createScene(Scene &scene) {
 
 void setupController(Scene &scene) {
     scene.controller.setCameraAspect(float(WINDOW_WIDTH) / WINDOW_HEIGHT);
-    scene.controller.setPosition(glm::vec3(0.5, 64.5, 0.5));
+    scene.controller.setPosition(glm::vec3(0.5, 150.5, 0.5));
 }
 
 void createChunks(Scene &scene) {

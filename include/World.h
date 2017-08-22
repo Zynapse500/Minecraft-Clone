@@ -44,7 +44,7 @@ private:
     glm::ivec3 getRayBlockIntersectionNormal(glm::vec3 origin, glm::vec3 ray, glm::ivec3 block, unsigned int type);
 
     // The size of the visible area (square size)
-    const int visibleChunkDiameter = 5;
+    const int visibleChunkDiameter = 24;
 };
 
 

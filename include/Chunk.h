@@ -8,6 +8,8 @@
 
 #include <vector>
 #include "Model.h"
+#include "Perlin.h"
+#include "FractalNoise.h"
 
 class Chunk {
 
@@ -26,6 +28,9 @@ public:
     // Sets the chunk's neighbor in a direction
     void setNeighbor(Chunk* neighbor, int dx, int dz);
 
+    // Converts a direction to a neighbor
+    Chunk* getNeighbor(int dx, int dz);
+
 
     // Removes a block and return it's old type (global coordinates)
     unsigned removeBlock(int x, int y, int z);
@@ -43,7 +48,7 @@ private:
 
     // Height and size of the chunk (width = depth = size)
     static const unsigned size = 16;
-    static const unsigned height = 256;
+    static const unsigned height = 1024;
 
     // Position of the chunk in the world (y never changes)
     int chunk_x = 0;
@@ -56,8 +61,7 @@ private:
     // The chunk's neighbors
     Chunk* neighbors[4] = {nullptr};
 
-    // Converts a direction to a neighbor
-    Chunk* getNeighbor(int dx, int dz);
+
 
 
     // Returns a reference to the block at location (x, y, z)
@@ -93,6 +97,10 @@ private:
 
     // Updates the meshes of the neighboring chunkgs
     void updateNeighboringChunks();
+
+
+    // Perlin noise generator
+    static Perlin perlin;
 };
 
 #endif //MINECRAFT_CLONE_CHUNK_H

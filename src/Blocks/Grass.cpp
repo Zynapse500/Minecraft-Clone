@@ -12,16 +12,11 @@ void Grass::mine(glm::ivec3 position) const {
 }
 
 std::vector<PixelData> Grass::loadTextures() const {
-    std::vector<PixelData> pixelData(3);
-
-    PixelData& top = pixelData[0];
-    lodepng_decode32_file(&top.pixels, &top.width, &top.height, "resources/textures/grass.png");
-
-    PixelData& side = pixelData[1];
-    lodepng_decode32_file(&side.pixels, &side.width, &side.height, "resources/textures/grass_side.png");
-
-    PixelData& bottom = pixelData[2];
-    lodepng_decode32_file(&bottom.pixels, &bottom.width, &bottom.height, "resources/textures/dirt.png");
+    std::vector<PixelData> pixelData = {
+            "resources/textures/grass.png",
+            "resources/textures/grass_side.png",
+            "resources/textures/dirt.png"
+    };
 
     return pixelData;
 }

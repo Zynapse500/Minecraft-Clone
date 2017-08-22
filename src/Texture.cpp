@@ -2,6 +2,8 @@
 // Created by chris on 11/08/2017.
 //
 
+#include <IMG/lodepng.h>
+#include <stdexcept>
 #include "Texture.h"
 
 void PixelData::blit(const PixelData &data, GLuint destX, GLuint destY) {
@@ -61,6 +63,20 @@ void PixelData::blitWithPadding(PixelData& data, unsigned int destX, unsigned in
     }
 
     // Corners
+}
+
+void PixelData::load(const char *path) {
+    unsigned error = lodepng_decode32_file(&pixels, &width, &height, path);
+    if(error != 0) {
+        throw std::runtime_error("Failed to load image: " + std::string(path));
+    }
+}
+
+PixelData::PixelData(const char * path) {
+    load(path);
+}
+
+PixelData::PixelData() {
 }
 
 

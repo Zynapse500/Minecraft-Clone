@@ -6,6 +6,8 @@
 #include "Chunk.h"
 #include "Blocks/AggregateBlockRegister.h"
 
+Perlin Chunk::perlin(100);
+
 void Chunk::generate(int _x, int _z) {
     chunk_x = _x;
     chunk_z = _z;
@@ -230,12 +232,33 @@ void Chunk::generateModel() {
     blocksHaveChanged = false;
 }
 
-int Chunk::getHeightmapValue(int x, int z) {
+int Chunk::getHeightmapValue(int x_, int z_) {
 
-    int a = (abs(x) % 64);
-    int b = (abs(z) % 64);
+    float x = x_;
+    float y = z_;
 
-    return a + b;
+    auto lerp = [](float t, float a, float b) -> float {
+        return (a - b) * t + b;
+    };
+
+    float heightScale = lerp(perlin.noise(x * 0.004f,
+                                          y * 0.004f,
+                                          1231.f)
+                             * perlin.noise(x * 0.003f,
+                                            y * 0.003f,
+                                            512345.f), 0.3f, 2.5f);
+
+    return int(64
+               + heightScale * (4 * perlin.noise(0.1f * x,
+                                                 0.1f * y,
+                                                 0.8f)
+                                + 128 * perlin.noise(0.005f * x,
+                                                     0.005f * y,
+                                                     4.8f)
+                                + 48 * perlin.noise(0.02f * x,
+                                                    0.02f * y,
+                                                    84.64f))
+    );
 }
 
 void Chunk::setNeighbor(Chunk *neighbor, int dx, int dz) {
