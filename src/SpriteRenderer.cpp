@@ -103,7 +103,7 @@ void SpriteRenderer::draw(Texture &texture, glm::vec2 position, glm::vec2 size) 
     currentSprite.indices.push_back(startVertex + 0);
 }
 
-void SpriteRenderer::draw(TextureRegion &region, glm::vec2 position, glm::vec2 size) {
+void SpriteRenderer::draw(const TextureRegion& region, glm::vec2 position, glm::vec2 size) {
     Sprite &currentSprite = sprites[*region.texture];
     currentSprite.texture = region.texture;
 

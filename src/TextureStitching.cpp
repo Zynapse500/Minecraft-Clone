@@ -10,10 +10,10 @@ Texture stitchTextures(PixelData *pixelDatas, TextureRegion *textureRegions, int
 
     // Data for one of the complete texture's sub-images
     struct SubTexture {
-        PixelData &data;
-        TextureRegion &region;
+        PixelData& data;
+        TextureRegion& region;
 
-        SubTexture(PixelData &_data, TextureRegion &_region) : data(_data), region(_region) {
+        SubTexture(PixelData& _data, TextureRegion& _region) : data(_data), region(_region) {
         }
     };
 
@@ -31,10 +31,12 @@ Texture stitchTextures(PixelData *pixelDatas, TextureRegion *textureRegions, int
 
     // Determine the minimum rectangle to fit every individual texture
     GLuint maxWidth = 0, maxHeight = 0;
-    for (auto &subTexture : subTextures) {
+    for (auto& subTexture : subTextures) {
         maxHeight = std::max(subTexture.data.height, maxHeight);
         maxWidth = std::max(subTexture.data.width, maxWidth);
     }
+    maxWidth += 2;
+    maxHeight += 2;
 
     // Determine how many tiles to allocate
     auto horizontalTiles = GLuint(ceilf(sqrtf(count)));
@@ -49,12 +51,13 @@ Texture stitchTextures(PixelData *pixelDatas, TextureRegion *textureRegions, int
     // Blit all the sub-textures into the complete one
     int x = 0;
     int y = 0;
-    for (auto &subTexture : subTextures) {
+    for (auto& subTexture : subTextures) {
         unsigned int blit_x = x * maxWidth, blit_y = y * maxHeight;
-        completeData.blit(subTexture.data, blit_x, blit_y);
+        completeData.blitWithPadding(subTexture.data, blit_x, blit_y);
 
         subTexture.region.texture = &texture;
-        subTexture.region.offset = glm::vec2(float(blit_x) / completeData.width, float(blit_y) / completeData.height);
+        subTexture.region.offset = glm::vec2(float(blit_x + 1) / completeData.width,
+                                             float(blit_y + 1) / completeData.height);
         subTexture.region.size = glm::vec2(float(subTexture.data.width) / completeData.width,
                                            float(subTexture.data.height) / completeData.height);
 

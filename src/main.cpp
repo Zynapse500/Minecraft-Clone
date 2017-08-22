@@ -17,11 +17,12 @@
 #include "ReadFile.h"
 #include "IMG/lodepng.h"
 
+#include "Blocks/AggregateBlockRegister.h"
 
 
 /*
  * TODO: [X] Add texture regions and atlases
- * TODO: [ ] Add multiple block types
+ * TODO: [X] Add multiple block types
  * TODO: [ ] Add perlin-noise generator
  * TODO: [ ] Add world generation
  * TODO: [ ] Move chunkloading to another thread
@@ -45,9 +46,6 @@ struct Scene {
 
     World world;
 
-
-    Texture textureAtlas;
-    std::vector<TextureRegion> textureRegions;
 
     SpriteRenderer renderer;
 
@@ -126,6 +124,9 @@ int main() {
     glEnable(GL_CULL_FACE);
 
 
+    // Load all blocks
+    registerAllBlocks();
+    BlockManager::loadTextures();
 
     // Create scene
     Scene scene = Scene();
@@ -177,6 +178,21 @@ int main() {
 void update(Scene &scene, float deltaTime) {
     auto time = float(glfwGetTime());
 
+    {
+        static float elapsedTime = 0;
+        static int frames = 0;
+        frames++;
+        elapsedTime += deltaTime;
+        if(elapsedTime > 0.5) {
+            float fps = frames / elapsedTime;
+
+            frames = 0;
+            elapsedTime = 0;
+
+            glfwSetWindowTitle(window, std::to_string(fps).c_str());
+        }
+    }
+
     scene.controller.rotate(0.003f * mouseDelta.x, -0.003f * mouseDelta.y);
 
     float moveSpeed = 4;
@@ -209,8 +225,8 @@ void update(Scene &scene, float deltaTime) {
 }
 
 void render(Scene &scene) {
-
-    scene.texture.bind();
+    //scene.texture.bind();
+    BlockManager::blockTextureAtlas->bind();
     scene.shader.use();
 
     glm::mat4 projectionViewMatrix = scene.controller.getCombinedMatrix();
@@ -221,7 +237,7 @@ void render(Scene &scene) {
 
     scene.world.draw(scene.controller.getPosition());
 
-    scene.texture.unbind();
+    BlockManager::blockTextureAtlas->unbind();
 
 
     glLineWidth(2);
@@ -242,8 +258,7 @@ void render(Scene &scene) {
     projectionViewMatrix = glm::ortho(0.0f, float(windowSize.x), float(windowSize.y), 0.0f);
     scene.renderer.begin(projectionViewMatrix);
 
-    scene.renderer.draw(scene.textureRegions[currentRegion], glm::vec2(0, 0), glm::vec2(128, 128));
-    scene.renderer.draw(scene.textureAtlas, glm::vec2(0, 128), glm::vec2(128, 128));
+    scene.renderer.draw(*BlockManager::blockTextureAtlas, glm::vec2(0, 0), glm::vec2(128, 128));
 
     scene.renderer.end();
 }
@@ -294,11 +309,11 @@ void onKeyPressed(GLFWwindow *window, int key, int scancode, int action, int mod
 
 
             case GLFW_KEY_UP:
-                currentRegion = glm::clamp(currentRegion + 1, 0, int(currentScene->textureRegions.size() - 1));
+                currentRegion = glm::clamp(currentRegion + 1, 0, BlockManager::getBlockCount() - 1);
                 break;
 
             case GLFW_KEY_DOWN:
-                currentRegion = glm::clamp(currentRegion - 1, 0, int(currentScene->textureRegions.size() - 1));
+                currentRegion = glm::clamp(currentRegion - 1, 0, BlockManager::getBlockCount() - 1);
                 break;
 
 
@@ -442,26 +457,6 @@ void createTextures(Scene &scene) {
     scene.texture.setPixelData(grass);
     scene.texture.setMinMagFilter(GL_LINEAR, GL_NEAREST);
     scene.texture.setWrapMode(GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
-
-
-
-    const char* texturePaths[] = {
-            "resources/textures/grass.png",
-            "resources/textures/dirt.png",
-            "resources/textures/stone.png",
-    };
-    const int textureCount = sizeof(texturePaths) / sizeof(texturePaths[0]);
-    auto* pixelDatas = new PixelData[textureCount];
-
-    for(int i = 0; i < textureCount; i++) {
-        auto& data = pixelDatas[i];
-        auto& path = texturePaths[i];
-
-        lodepng_decode32_file(&data.pixels, &data.width, &data.height, path);
-    }
-
-    scene.textureRegions.resize(unsigned(textureCount));
-    scene.textureAtlas = stitchTextures(pixelDatas, scene.textureRegions.data(), textureCount);
 }
 
 void createModels(Scene &scene) {

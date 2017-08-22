@@ -49,7 +49,7 @@ public:
     void draw(Texture& texture, glm::vec2 position, glm::vec2 size);
 
     // Renders a region of a texture
-    void draw(TextureRegion& region, glm::vec2 position, glm::vec2 size);
+    void draw(const TextureRegion& region, glm::vec2 position, glm::vec2 size);
 
 
 private:

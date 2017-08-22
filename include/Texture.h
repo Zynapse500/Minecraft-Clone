@@ -17,8 +17,13 @@ struct PixelData {
     unsigned int width = 0;
     unsigned int height = 0;
 
-    // "pastes" pixels into these at (x, y)
+    // "pastes" other data's pixels into these at (x, y)
     void blit(const PixelData &data, GLuint destX, GLuint destY);
+
+    // "pastes" other data's pixels into these at (x, y)
+    // Adds a 1-pixel border around the blitted image
+    // The total pasted width and height is effectively increased by 2 pixels
+    void blitWithPadding(PixelData& data, unsigned int x, unsigned int y);
 };
 
 
@@ -28,8 +33,16 @@ struct PixelData {
 class Texture {
 public:
 
-    // Creates a texture with width and height
     Texture();
+
+    // Creates an empty texture with width and height
+    Texture(GLuint width, GLuint height);
+
+    // Creates a texture with pixels
+    Texture(unsigned char *pixels, GLuint width, GLuint height);
+    Texture(PixelData& data);
+
+
 
     // Sets the pixels of the texture
     void setPixelData(unsigned char *pixels, GLuint width, GLuint height);
@@ -48,9 +61,9 @@ public:
     void setWrapMode(int s, int t);
 
     // Returns the width and the height of the texture
-    GLuint getWidth() { return width; }
-    GLuint getHeight() { return height; }
-    glm::ivec2 getSize() { return glm::ivec2(width, height); }
+    GLuint getWidth() const { return width; }
+    GLuint getHeight() const { return height; }
+    glm::ivec2 getSize() const { return glm::ivec2(width, height); }
 
 
     // Determines which texture was created first

@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.8)
 project(Minecraft_Clone)
 
 set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_FLAGS "-Og")
 
 include_directories(include)
 
@@ -52,7 +53,7 @@ set(SOURCE_FILES
     # World
         src/Chunk.cpp include/Chunk.h
         src/World.cpp include/World.h
-        src/Block.cpp include/Block.h)
+        src/Block.cpp include/Block.h src/Blocks/Grass.cpp src/Blocks/Grass.h src/Blocks/AggregateBlockRegister.h src/Blocks/Stone.cpp src/Blocks/Stone.h src/Blocks/Dirt.cpp src/Blocks/Dirt.h src/Blocks/Air.cpp src/Blocks/Air.h src/Blocks/AggregateBlockRegister.cpp)
 
 add_executable(Minecraft_Clone ${SOURCE_FILES})
 

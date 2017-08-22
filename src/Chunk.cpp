@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include "Chunk.h"
+#include "Blocks/AggregateBlockRegister.h"
 
 void Chunk::generate(int _x, int _z) {
     chunk_x = _x;
@@ -22,10 +23,14 @@ void Chunk::generate(int _x, int _z) {
             for (int z = 0; z < size; ++z) {
                 int height = heightmap[x][z];
 
-                if (y <= height)
-                    *getBlockLocal(x, y, z) = 1;
+                if (y <= height - 4)
+                    *getBlockLocal(x, y, z) = BlockID::Stone;
+                else if (y <= height - 1)
+                    *getBlockLocal(x, y, z) = BlockID::Dirt;
+                else if (y <= height)
+                    *getBlockLocal(x, y, z) = BlockID::Grass;
                 else
-                    *getBlockLocal(x, y, z) = 0;
+                    *getBlockLocal(x, y, z) = BlockID::Air;
             }
         }
     }
@@ -157,7 +162,7 @@ void Chunk::addFace(int x, int y, int z, int dir_x, int dir_y, int dir_z, unsign
         this->vertices.emplace_back(glm::vec3(x, y, z + 1), glm::vec2(0, 1), glm::vec3(0, -1, 0));
     }
 
-    for (auto &index : indices) {
+    for (auto& index : indices) {
         this->indices.push_back(index);
     }
 }
@@ -172,29 +177,51 @@ void Chunk::generateModel() {
             glm::ivec3(0, 0, 1), glm::ivec3(0, 0, -1),
     };
 
+    std::vector<Vertex> blockVertices;
+    std::vector<GLuint> blockIndices;
+    int vertexCount = 0;
+
     for (int x = 0; x < size; ++x) {
         for (int y = 0; y < height; ++y) {
             for (int z = 0; z < size; ++z) {
-                unsigned *currentBlock = getBlockLocal(x, y, z);
+                unsigned currentBlock = *getBlockLocal(x, y, z);
 
-                if (*currentBlock != 0) {
-                    // For every direction check adjacent blocks and add face
-                    for (auto &dir : directions) {
-                        auto *adjacentBlock = getBlockGlobal(x + dir.x + size * chunk_x,
-                                                             y + dir.y,
-                                                             z + dir.z + size * chunk_z);
+                if (currentBlock != BlockID::Air) {
+                    // For every direction add neighbors
+                    const Block *neighbors[6];
 
-                        if (adjacentBlock == nullptr || *adjacentBlock == 0)
-                            addFace(x, y, z, dir.x, dir.y, dir.z, *currentBlock);
+                    for (int i = 0; i < 6; i++) {
+                        auto& dir = directions[i];
+
+                        auto *adjacentBlockID = getBlockGlobal(x + dir.x + size * chunk_x,
+                                                               y + dir.y,
+                                                               z + dir.z + size * chunk_z);
+
+                        if (adjacentBlockID == nullptr)
+                            neighbors[i] = nullptr;
+                        else
+                            neighbors[i] = &BlockManager::getBlock(*adjacentBlockID);
                     }
+
+                    std::tie(blockVertices, blockIndices) = BlockManager::getBlock(currentBlock).appendFaces
+                            (neighbors, glm::ivec3(x + size * chunk_x, y, z + size * chunk_z));
+
+
+                    for (auto&& index : blockIndices) {
+                        index += vertexCount;
+                    }
+                    vertexCount += blockVertices.size();
+
+                    this->vertices.insert(vertices.end(), blockVertices.begin(), blockVertices.end());
+                    this->indices.insert(indices.end(), blockIndices.begin(), blockIndices.end());
                 }
             }
         }
     }
 
 
-    model.setVertices(this->vertices.data(), GLuint(this->vertices.size()));
-    model.setIndices(this->indices.data(), GLuint(this->indices.size()));
+    model.setVertices(this->vertices.data(), this->vertices.size());
+    model.setIndices(this->indices.data(), this->indices.size());
 
     this->vertices.clear();
     this->indices.clear();
@@ -241,6 +268,8 @@ unsigned Chunk::removeBlock(int x, int y, int z) {
     if (block != nullptr) {
         unsigned oldType = *block;
 
+        BlockManager::getBlock(oldType).mine(glm::ivec3(x, y, z));
+
         *block = 0;
 
         blocksHaveChanged = true;
@@ -261,7 +290,7 @@ void Chunk::placeBlock(int x, int y, int z, unsigned int type) {
 
 void Chunk::updateNeighboringChunks() {
     // Update the neighbor's meshes
-    for (auto &neighbor : neighbors) {
+    for (auto& neighbor : neighbors) {
         if (neighbor != nullptr) {
             neighbor->generateModel();
         }
@@ -269,8 +298,8 @@ void Chunk::updateNeighboringChunks() {
 }
 
 unsigned Chunk::getBlock(int x, int y, int z) {
-    unsigned* block = getBlockGlobal(x, y, z);
-    if(block == nullptr)
+    unsigned *block = getBlockGlobal(x, y, z);
+    if (block == nullptr)
         return 0;
     return *block;
 }

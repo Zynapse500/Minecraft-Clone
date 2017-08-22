@@ -11,6 +11,10 @@
 /*
  * Takes multiple images and stitches them together
  * into a single texture
+ *
+ * Adds some padding on the sides of each texture to
+ * reduce bleeding
+ *
  * Saves each texture's location int the texture
  * in it's respective texture region
  */

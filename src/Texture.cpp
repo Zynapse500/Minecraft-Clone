@@ -16,9 +16,57 @@ void PixelData::blit(const PixelData &data, GLuint destX, GLuint destY) {
     }
 }
 
+void PixelData::blitWithPadding(PixelData& data, unsigned int destX, unsigned int destY) {
+
+    auto copyInto = [this, &data](int src_x, int src_y, int dest_x, int dest_y) {
+        int startDestinationIndex = ((dest_x) + (dest_y) * this->width) * 4;
+        int startSourceIndex = (src_x + src_y * data.width) * 4;
+        for (int i = 0; i < 4; ++i) {
+            this->pixels[startDestinationIndex + i] = data.pixels[startSourceIndex + i];
+        }
+    };
+
+    for (int y = 0; y < data.height; ++y) {
+        for (int x = 0; x < data.width; ++x) {
+            copyInto(x, y, destX + x + 1, destY + y + 1);
+        }
+    }
+    
+    /*
+     * Add padding
+     */
+    // Horizontal strips
+    for (int x = 0; x < data.width; ++x) {
+        copyInto(x, 0, destX + x + 1, destY);
+        copyInto(x, data.height - 1, destX + x + 1, destY + data.height + 1);
+    }
+    // Vertical strips
+    for (int y = 0; y < data.height; ++y) {
+        copyInto(0, y, destX, destY + y + 1);
+        copyInto(data.width - 1, y, destX + data.width + 1, destY + y + 1);
+    }
+
+    // Corners
+    copyInto(0, 0, destX, destY);
+    copyInto(0, data.height - 1, destX, destY + data.height + 1);
+    copyInto(data.width - 1, 0, destX + data.width + 1, destY);
+    copyInto(data.width - 1, data.height - 1, destX + data.width + 1, destY + data.height + 1);
+}
+
 
 Texture::Texture() {
     glGenTextures(1, &this->h_texture);
+}
+
+Texture::Texture(GLuint width, GLuint height): Texture(nullptr, width, height) {
+}
+
+Texture::Texture(unsigned char *pixels, GLuint width, GLuint height) : Texture() {
+    setPixelData(pixels, width, height);
+}
+
+Texture::Texture(PixelData& data): Texture() {
+    setPixelData(data);
 }
 
 void Texture::setPixelData(unsigned char *pixels, GLuint width, GLuint height) {
