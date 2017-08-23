@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.8)
 project(Minecraft_Clone)
 
 set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_FLAGS "-Og")
+set(CMAKE_CXX_FLAGS "-Og -m64")
 
 include_directories(include)
 
@@ -65,7 +65,8 @@ set(SOURCE_FILES
         src/Blocks/Dirt.cpp src/Blocks/Dirt.h
         src/Blocks/Air.cpp src/Blocks/Air.h
 
-        )
+    # Threading
+        include/WorkQueue.tpp include/WorkQueue.h)
 
 add_executable(Minecraft_Clone ${SOURCE_FILES})
 

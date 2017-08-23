@@ -7,6 +7,9 @@
 
 
 #include <map>
+#include <thread>
+#include <mutex>
+#include <queue>
 #include "Chunk.h"
 
 class World {
@@ -44,7 +47,14 @@ private:
     glm::ivec3 getRayBlockIntersectionNormal(glm::vec3 origin, glm::vec3 ray, glm::ivec3 block, unsigned int type);
 
     // The size of the visible area (square size)
-    const int visibleChunkDiameter = 24;
+    const int visibleChunkDiameter = 32;
+
+    // Removes all chunks outside the area
+    void removeChunksOutsideRange(glm::ivec2 center, int diameter);
+
+    // Adds chunks inside the area to the list of chunks to be generated
+    void createChunksWithinRange(glm::ivec2 center, int diameter);
+
 };
 
 

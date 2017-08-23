@@ -14,17 +14,24 @@ void World::generate() {
 }
 
 void World::update(glm::vec3 playerPosition) {
-    // Find the chunk closest to the player that is still not generated
+    // Find the chunk that encloses the player
     glm::ivec2 chunkPosition;
     chunkPosition.x = int(floorf(playerPosition.x / 16));
     chunkPosition.y = int(floorf(playerPosition.z / 16));
 
-    // Remove all chunks outside range
+    // Unload all chunks outside player's visible range
+    removeChunksOutsideRange(chunkPosition, visibleChunkDiameter);
+
+    // Create chunks within player's visible range
+    createChunksWithinRange(chunkPosition, visibleChunkDiameter);
+}
+
+void World::removeChunksOutsideRange(glm::ivec2 center, int diameter) {
     for (auto iterator = chunks.begin(); iterator != chunks.end();) {
         auto& key = iterator->first;
         glm::ivec2 position(key.first, key.second);
 
-        if (abs(position.x - chunkPosition.x) + abs(position.y - chunkPosition.y) > visibleChunkDiameter) {
+        if (abs(position.x - center.x) + abs(position.y - center.y) > diameter) {
             // Set all the neighbors referencing this chunk to nullptr
             Chunk& chunk = iterator->second;
             glm::ivec2 directions[] = {
@@ -32,8 +39,8 @@ void World::update(glm::vec3 playerPosition) {
                     glm::ivec2(0, 1), glm::ivec2(0, -1)
             };
             for (auto&& direction : directions) {
-                Chunk* neighbor = chunk.getNeighbor(direction.x, direction.y);
-                if(neighbor != nullptr) {
+                Chunk *neighbor = chunk.getNeighbor(direction.x, direction.y);
+                if (neighbor != nullptr) {
                     neighbor->setNeighbor(nullptr, -direction.x, -direction.y);
                 }
             }
@@ -43,15 +50,15 @@ void World::update(glm::vec3 playerPosition) {
             iterator++;
         }
     }
+}
 
-
-    // Create chunks within range
+void World::createChunksWithinRange(glm::ivec2 center, int diameter) {
     int x = 0, y = 0;
     int dx = 0, dy = -1;
 
-    for (int i = 0; i < visibleChunkDiameter * visibleChunkDiameter; ++i) {
+    for (int i = 0; i < diameter * diameter; ++i) {
 
-        auto currentChunk = std::make_pair(chunkPosition.x + x, chunkPosition.y + y);
+        auto currentChunk = std::make_pair(center.x + x, center.y + y);
 
         if (chunks.find(currentChunk) == chunks.end()) {
 

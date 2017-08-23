@@ -246,9 +246,9 @@ int Chunk::getHeightmapValue(int x_, int z_) {
                                           1231.f)
                              * perlin.noise(x * 0.003f,
                                             y * 0.003f,
-                                            512345.f), 0.3f, 2.5f);
+                                            512345.f), 0.3f, 1.5f);
 
-    return int(64
+    return int(16
                + heightScale * (4 * perlin.noise(0.1f * x,
                                                  0.1f * y,
                                                  0.8f)
